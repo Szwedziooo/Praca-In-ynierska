@@ -18,11 +18,10 @@ while True:
     ret, frame = cap.read()
     for (x,y,w,h) in ROIs:
         cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
-
-    for idx, (x,y,w,h) in enumerate(ROIs):
-        if ret:
+    if ret:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        for idx, (x,y,w,h) in enumerate(ROIs):
             tmp_frame = frame[y:y+h,x:x+w]
-            tmp_frame = cv2.cvtColor(tmp_frame, cv2.COLOR_BGR2RGB)
             ret_qr, decoded_info, points, _ = qcd.detectAndDecodeMulti(tmp_frame)
             if ret_qr:
                 for s, p in zip(decoded_info, points):
@@ -34,5 +33,5 @@ while True:
                     frame = cv2.polylines(frame, [p.astype(int) + np.array((x,y))], True, color, 5)
                     frame = cv2.putText(frame,s,p[0].astype(int) + np.array((x,y)),1,2,color,2)
 
-    placeholder.image(frame,channels="RGB")
+    placeholder.image(frame, channels="RGB")
 
