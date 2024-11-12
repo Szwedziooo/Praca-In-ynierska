@@ -62,9 +62,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .form-select {
-            margin-top: 15px;
-        }
     </style>
 </head>
 <body class="light-mode">
@@ -77,16 +74,6 @@
         <!-- Obraz podglądu kamery -->
         <img src="{{ url_for('video_feed') }}" width="640" height="480" alt="Podgląd kamery">
 
-        <!-- Formularz do wyboru opcji -->
-        <form action="{{ url_for('handle_option') }}" method="POST" class="form-select">
-            <label for="options">Wybierz opcję:</label>
-            <select name="selected_option" id="options">
-                <option value="Opcja 1">Detekcja</option>
-                <option value="Opcja 2">Ustawienie ROI</option>
-                <option value="Opcja 3">Rezerwa</option>
-            </select>
-            <button type="submit">Wyślij</button>
-        </form>
     </div>
 
     <script>
