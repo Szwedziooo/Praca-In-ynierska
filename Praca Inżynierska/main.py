@@ -7,7 +7,7 @@ import threading as th
 app = Flask(__name__)
 
 qcd = cv2.QRCodeDetector()
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(0)
 
 ROIs = [(0,0,150,150),(350,0,150,150)]
 
