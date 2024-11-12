@@ -15,8 +15,8 @@ cap.set(cv2.CAP_PROP_FPS, 10)
 ROIs = [(0,0,150,150),(350,0,150,150)]
 
 
-scaned_qr_zones_bools = [False] * sizeof(ROIs)
-scaned_qr_zones_str = [""] * sizeof(ROIs)
+scaned_qr_zones_bools = [False] * len(ROIs)
+scaned_qr_zones_str = [""] * len(ROIs)
 
 
 global_frame = None
