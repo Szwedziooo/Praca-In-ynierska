@@ -8,8 +8,11 @@ app = Flask(__name__)
 
 qcd = cv2.QRCodeDetector()
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FPS, 10)
+
 
 ROIs = [(0,0,150,150),(350,0,150,150)]
+
 
 global_frame = None
 frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
