@@ -13,8 +13,6 @@ cap.set(cv2.CAP_PROP_FPS, 10)
 
 
 ROIs = [(0,0,150,150),(350,0,150,150)]
-
-
 scaned_qr_zones_bools = [False] * len(ROIs)
 scaned_qr_zones_str = [""] * len(ROIs)
 
@@ -27,6 +25,8 @@ def optical_procesing():
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        
 
         if ret:
             for idx, (x,y,w,h) in enumerate(ROIs):
