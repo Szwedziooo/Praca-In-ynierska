@@ -1,3 +1,4 @@
+from ctypes import sizeof
 import cv2
 import numpy as np
 from flask import Flask, render_template, request, jsonify, Response
@@ -14,6 +15,10 @@ cap.set(cv2.CAP_PROP_FPS, 10)
 ROIs = [(0,0,150,150),(350,0,150,150)]
 
 
+scaned_qr_zones_bools = [False] * sizeof(ROIs)
+scaned_qr_zones_str = [""] * sizeof(ROIs)
+
+
 global_frame = None
 frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
 
@@ -28,6 +33,7 @@ def optical_procesing():
                 tmp_frame = frame[y:y+h,x:x+w]
                 ret_qr, decoded_info, points, _ = qcd.detectAndDecodeMulti(tmp_frame)
                 if ret_qr:
+                    scaned_qr_zones_bools[idx] = True
                     for s, p in zip(decoded_info, points):
                         if s:
                             color = (0, 255, 0)
@@ -35,6 +41,9 @@ def optical_procesing():
                             color = (0, 0, 255)
                         frame = cv2.polylines(frame, [p.astype(int) + np.array((x,y))], True, color, 5)
                         frame = cv2.putText(frame,s,p[0].astype(int) + np.array((x,y)),1,2,color,2)
+                else:
+                    scaned_qr_zones_bools[idx] = False
+            print(scaned_qr_zones_bools)
         with frame_lock:
             global_frame = frame.copy()  # Kopiujemy klatkę do global_frame
             
