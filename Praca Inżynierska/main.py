@@ -25,7 +25,7 @@ def optical_procesing():
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
-        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         
 
         if ret:
