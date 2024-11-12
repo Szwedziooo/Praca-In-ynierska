@@ -27,6 +27,7 @@ def optical_procesing():
         ret, frame = cap.read()
         # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         
+        
 
         if ret:
             for idx, (x,y,w,h) in enumerate(ROIs):

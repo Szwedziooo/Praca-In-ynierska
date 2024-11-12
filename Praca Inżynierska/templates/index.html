@@ -4,9 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Podgląd z kamery</title>
+    <style>
+        /* Styl ogólny */
+        body {
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+            /* Styl dla trybu jasnego */
+            body.light-mode {
+                background-color: #f0f0f0;
+                color: #333;
+            }
+
+            /* Styl dla trybu ciemnego */
+            body.dark-mode {
+                background-color: #333;
+                color: #f0f0f0;
+            }
+
+        h2 {
+            text-align: center;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mode-toggle {
+            margin: 15px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Styl przycisku w trybie jasnym */
+        .light-mode .mode-toggle {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+
+        /* Styl przycisku w trybie ciemnym */
+        .dark-mode .mode-toggle {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        img {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
-<body>
-    <h2>Podgląd z kamery</h2>
-    <img src="{{ url_for('video_feed') }}" width="640" height="480" alt="Podgląd kamery">
+<body class="light-mode">
+    <div class="container">
+        <h2>Podgląd z kamery</h2>
+        <button class="mode-toggle" onclick="toggleMode()">Zmień tryb</button>
+        <img src="{{ url_for('video_feed') }}" width="640" height="480" alt="Podgląd kamery">
+    </div>
+
+    <script>
+        function toggleMode() {
+            // Zmiana trybu na ciemny lub jasny
+            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
+        }
+    </script>
 </body>
 </html>
