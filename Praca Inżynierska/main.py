@@ -34,6 +34,7 @@ def optical_procesing():
                 ret_qr, decoded_info, points, _ = qcd.detectAndDecodeMulti(tmp_frame)
                 if ret_qr:
                     scaned_qr_zones_bools[idx] = True
+                    scaned_qr_zones_str[idx] = decoded_info
                     for s, p in zip(decoded_info, points):
                         if s:
                             color = (0, 255, 0)
@@ -43,7 +44,9 @@ def optical_procesing():
                         frame = cv2.putText(frame,s,p[0].astype(int) + np.array((x,y)),1,2,color,2)
                 else:
                     scaned_qr_zones_bools[idx] = False
+                    scaned_qr_zones_str[idx] = ""
             print(scaned_qr_zones_bools)
+            print(scaned_qr_zones_str)
         with frame_lock:
             global_frame = frame.copy()  # Kopiujemy klatkę do global_frame
             
