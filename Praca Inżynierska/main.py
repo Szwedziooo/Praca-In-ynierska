@@ -24,11 +24,8 @@ def optical_procesing():
     global global_frame
     while True:
         # Pobierz klatkę z kamery
-        ret, frame = cap.read()
-        # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-        
-        
-
+        ret, frame = cap.read()     
+       
         if ret:
             for idx, (x,y,w,h) in enumerate(ROIs):
                 tmp_frame = frame[y:y+h,x:x+w]
