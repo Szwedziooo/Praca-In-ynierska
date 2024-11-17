@@ -62,19 +62,40 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
+        #video_box {
+            float: left;
+            align-items: center;
+        }
+        #video_box {
+            float: left;
+            align-items: center;
+        }
+
     </style>
 </head>
 <body class="light-mode">
-    <div class="container">
+    <div>
         <h2>Podgląd z kamery</h2>
-
         <!-- Przycisk do zmiany trybu jasny/ciemny -->
         <button class="mode-toggle" onclick="toggleMode()">Zmień tryb</button>
+        <div class="container" id="video_box">
+            <!-- Obraz podglądu kamery -->
+            <img src="{{ url_for('video_feed') }}" alt="Podgląd kamery" />
+        </div>
 
-        <!-- Obraz podglądu kamery -->
-        <img src="{{ url_for('video_feed') }}" width="640" height="480" alt="Podgląd kamery">
+        <div id="conf_box">
+            <p>Wybierz tryb:</p>
+            <form action="/" method="post"55555>
+                <select name="tryby">
+                    <option value="0">Wykrywanie</option>
+                    <option value="1">Ustawienie ROIs</option>
+                </select>
+                <button type="submit">Wyślij</button>
 
+            </form>
+        </div>
     </div>
+    
 
     <script>
         function toggleMode() {
