@@ -1,38 +1,71 @@
 import cv2
-import numpy as np
+from pyzbar.pyzbar import decode, ZBarSymbol
+import pyzbar
+import datetime
 
-img = cv2.imread("testqr1.png")
-if img is None:
-    print("Nie udalo sie zaladowac obrazu!")
+def detect_qr(img, margin=10):
+    detections = decode(img, symbols=[ZBarSymbol.QRCODE])
+    rois = []
 
-def set_ROIs(img, margin = 10):
-    func_qcd = cv2.QRCodeDetector()
-    ret_qr, _, points, _ = func_qcd.detectAndDecodeMulti(img)
-    func_ROIs = []
+    for detection in detections:
+        # Współrzędne prostokąta otaczającego kod QR
+        x, y, w, h = detection.rect
 
-    if ret_qr:
-        for a in points:
-            #Obliczanie punktów ROI
-            func_ROIs.append((int(a[0,0] - margin), int(a[0,1] - margin), int(a[1,0] - a[0,0] + 2*margin), int(a[3,1] - a[0,1] + 2*margin)))
-            # print("X:", a[0,0]) #x
-            # print("Y:", a[0,1]) #y
-            # print("W:", a[1,0] - a[0,0]) #w
-            # print("H:", a[3,1] - a[0,1]) #h
+        # Dodanie marginesu
+        x1 = max(x - margin, 0)
+        y1 = max(y - margin, 0)
+        x2 = min(x + w + margin, img.shape[1])
+        y2 = min(y + h + margin, img.shape[0])
+        
+        rois.append((x1, y1, x2 - x1, y2 - y1))
+       
+    rois.sort(key=lambda x: (-x[1], x[0]))
 
-        func_ROIs.sort(key=lambda x: (-x[1], x[0]))
-    
-        for idx, a in enumerate(func_ROIs):
-            #Rysowanie punktów ROI
-            img = cv2.rectangle(img, 
-                                (a[0], a[1]),
-                                (a[0] + a[2], a[1] + a[3]),
-                                color=(255,0,0), 
-                                thickness=2)
-            img = cv2.putText(img,f"strefa{idx}",(a[0],a[1]),1,2,(255,0,0),2)
-    return func_ROIs, img
+    return rois
 
 
-rois, img = set_ROIs(img=img)
+# Inicjalizacja kamery
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-cv2.imwrite("XD.png",img)
-print(rois)
+while not cap.isOpened():
+    print("czekam na otwarcie kamery")
+
+start = datetime.datetime.now()
+counter = 0
+FinalDetectionROIs = []
+
+while (datetime.datetime.now() - start).seconds < 5:
+    ret, img = cap.read()
+    if not ret:
+        print("Nie udało się odczytać obrazu z kamery.")
+        continue
+
+    # Detekcja kodów QR za pomocą pyzbar
+    rois = detect_qr(img, margin=10)
+    FinalDetectionROIs.append(rois)
+    counter += 1
+
+
+
+MaxQRDetected = 0
+for idx, x in enumerate(FinalDetectionROIs):
+    if len(x) > MaxQRDetected:
+        MaxQRDetected = len(x)
+    else:
+        FinalDetectionROIs.remove(x)
+
+   
+FinalDetectionROIs = FinalDetectionROIs.pop()
+
+# Wyświetlenie wyników
+print(FinalDetectionROIs)
+print(f"Max Wykrytych Kodow {MaxQRDetected}")
+print(counter)
+
+# Zapis ostatniego obrazu
+
+
+cap.release()
+
