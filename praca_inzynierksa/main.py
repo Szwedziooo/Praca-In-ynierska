@@ -153,7 +153,6 @@ threads = [
     th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True)
 ]
 
-
 if __name__ == "__main__":
    for t in threads:
        t.start()

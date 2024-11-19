@@ -1,4 +1,4 @@
-#!C:\Users\jacek\source\repos\Praca Inżynierska\Praca Inżynierska\venv\Scripts\python.exe
+#!C:\Users\jacek\source\repos\praca_inzynierska\praca_inzynierska\venv\Scripts\python.exe
 from __future__ import print_function
 
 import argparse
