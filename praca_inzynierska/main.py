@@ -104,7 +104,7 @@ def debuging():
         print(scaned_qr_zones_bools)
         print(scaned_qr_zones_str)
         os.system("clear")
-        time.sleep(100)
+        time.sleep(1)
 
             
 def generate_frame_www():
@@ -115,8 +115,6 @@ def generate_frame_www():
             else:
                 frame = global_frame.copy() 
 
-
-        print("www",ROIs)
         for idx, (x, y, w, h) in enumerate(ROIs):
             cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
             cv2.putText(frame,f"strefa: {idx}",(x,y),1,2,(0,255,0),2,1,False)
@@ -141,7 +139,6 @@ def index():
         # Odczytanie wartości z <select>
         selected_value = request.form.get('tryby')
         response_message = f"Wybrano opcję: {selected_value}"
-        print(response_message)
         global_detection_mode = int(selected_value)
 
 
