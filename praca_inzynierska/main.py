@@ -97,7 +97,7 @@ def optical_procesing():
                 ROIs = ROIs_temp.pop()
                 set_start_time = 1
                 global_detection_mode = 0
-    print((datetime.datetime.now() - start_time1).microseconds)
+    print("czas:",(datetime.datetime.now() - start_time1).microseconds)
 
 def debuging():
     global ROIs, scaned_qr_zones_bools, scaned_qr_zones_str
