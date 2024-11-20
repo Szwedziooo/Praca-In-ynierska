@@ -81,7 +81,7 @@ def optical_procesing():
                     continue
 
                 # Detekcja kodów QR za pomocą pyzbar
-                rois = detect_qr(img, margin=40)
+                rois = detect_qr(img, margin=10)
                 ROIs_temp.append(rois)
            
             else:
