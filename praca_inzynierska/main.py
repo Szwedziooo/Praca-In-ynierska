@@ -1,3 +1,5 @@
+from operator import truediv
+
 import cv2
 import numpy as np
 from flask import Flask, render_template, request, jsonify, Response
@@ -5,19 +7,22 @@ import threading as th
 from enum import Enum
 from playground import detect_qr
 import datetime
+import os
 
 
 app = Flask(__name__)
 
 
-qcd = cv2.QRCodeDetector()
 #dla linuxa
 cap = cv2.VideoCapture(0)
 #dla windowsa
 #cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+
 cap.set(cv2.CAP_PROP_FPS, 10)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+
+qcd = cv2.QRCodeDetector()
 
 
 ROIs = [(1026, 599, 155, 155), (714, 557, 196, 193), (1083, 346, 137, 133), (779, 309, 178, 170), (841, 76, 159, 148)]
@@ -29,12 +34,10 @@ scaned_qr_zones_str = [""] * 30
 global_frame = None
 frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
 
-
 global_detection_mode = 0
 
 set_start_time = 1
 start_time = datetime.datetime.now()
-
 
 
 def optical_procesing():
@@ -61,13 +64,10 @@ def optical_procesing():
                     else:
                         scaned_qr_zones_bools[idx] = False
                         scaned_qr_zones_str[idx] = ""
-                print(scaned_qr_zones_bools)
-                print(scaned_qr_zones_str)
             with frame_lock:
                 global_frame = frame.copy()  # Kopiujemy klatkę do global_frame
 
         elif global_detection_mode == 1:
-            print("XD DEBUG")
             if set_start_time:
                 start_time = datetime.datetime.now()
                 set_start_time = 0
@@ -85,7 +85,6 @@ def optical_procesing():
                 ROIs_temp.append(rois)
            
             else:
-                print("detect", ROIs_temp)
                 MaxQRDetected = 0
                 for idx, x in enumerate(ROIs_temp):
                     if len(x) > MaxQRDetected:
@@ -93,11 +92,17 @@ def optical_procesing():
                     else:
                         ROIs_temp.remove(x)
 
-                
                 ROIs = ROIs_temp.pop()
-
                 set_start_time = 1
                 global_detection_mode = 0
+
+def debuging():
+    global ROIs, scaned_qr_zones_bools, scaned_qr_zones_str
+    while True:
+        print(ROIs)
+        print(scaned_qr_zones_bools)
+        print(scaned_qr_zones_str)
+        os.system("clear")
 
             
 def generate_frame_www():
@@ -150,7 +155,8 @@ def video_feed():
 
 threads = [
     th.Thread(target=optical_procesing, daemon=True),
-    th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True)
+    th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True),
+    th.Thread(target=debuging, daemon=True)
 ]
 
 if __name__ == "__main__":
