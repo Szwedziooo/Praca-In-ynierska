@@ -7,6 +7,8 @@ import threading as th
 from playground import detect_qr
 import datetime
 import os
+from pyzbar.pyzbar import decode, ZBarSymbol
+
 
 app = Flask(__name__)
 
@@ -51,23 +53,37 @@ def optical_procesing():
             if ret:
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
-                    ret_qr, decoded_info, points, _ = qcd.detectAndDecodeMulti(tmp_frame)
+                    # ret_qr, decoded_info, points, _ = qcd.detectAndDecodeMulti(tmp_frame)
+                    detected = decode(tmp_frame)
 
-                    if ret_qr:
-                        scaned_qr_zones_bools[idx] = True
-                        scaned_qr_zones_str[idx] = decoded_info
-                        for s, p in zip(decoded_info, points):
-                            if s:
-                                color = (0, 255, 0)
-                            else:
-                                color = (0, 0, 255)
-                            frame = cv2.polylines(frame, [p.astype(int) + np.array((x,y))], True, color, 5)
-                            frame = cv2.putText(frame,s,p[0].astype(int) + np.array((x,y)),1,2,color,2)
-                    else:
+                    if not detected:
                         scaned_qr_zones_bools[idx] = False
                         scaned_qr_zones_str[idx] = ""
-            with frame_lock:
-                global_frame = frame.copy()  # Kopiujemy klatkę do global_frame
+                    else:
+                        scaned_qr_zones_bools[idx] = True
+                        scaned_qr_zones_str[idx] = detected[0].data
+                        print(np.array(detected[0].polygon, dtype=np.int32))
+                        frame = cv2.polylines(frame, [np.array(detected[0].polygon, dtype=np.int32) + np.array((x,y))], True,(0, 255, 0), 5)
+                        frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 255, 0),2)
+                    with frame_lock:
+                        global_frame = frame.copy()  # Kopiujemy klatkę do global_frame
+            #stare wykrywanie qr poprzez qcd
+            #         if ret_qr:
+            #             scaned_qr_zones_bools[idx] = True
+            #             scaned_qr_zones_str[idx] = decoded_info
+            #             for s, p in zip(decoded_info, points):
+            #                 if s:
+            #                     color = (0, 255, 0)
+            #                 else:
+            #                     color = (0, 0, 255)
+            #                     print([p.astype(int) + np.array((x,y))])
+            #                 frame = cv2.polylines(frame, [p.astype(int) + np.array((x,y))], True, color, 5)
+            #                 frame = cv2.putText(frame,s,p[0].astype(int) + np.array((x,y)),1,2,color,2)
+            #         else:
+            #             scaned_qr_zones_bools[idx] = False
+            #             scaned_qr_zones_str[idx] = ""
+            # with frame_lock:
+            #     global_frame = frame.copy()  # Kopiujemy klatkę do global_frame
 
         elif global_detection_mode == 1:
             if set_start_time:

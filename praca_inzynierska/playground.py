@@ -7,6 +7,7 @@ def detect_qr(img, margin=10):
     detections = decode(img, symbols=[ZBarSymbol.QRCODE])
     rois = []
 
+
     for detection in detections:
         # Współrzędne prostokąta otaczającego kod QR
         x, y, w, h = detection.rect
@@ -23,53 +24,53 @@ def detect_qr(img, margin=10):
 
     return rois
 
-
-# Inicjalizacja kamery
-#dla linuxa
-cap = cv2.VideoCapture(0)
-#dla windowsa
-#cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-cap.set(cv2.CAP_PROP_FPS, 10)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
-while not cap.isOpened():
-    print("czekam na otwarcie kamery")
-
-start = datetime.datetime.now()
-counter = 0
-FinalDetectionROIs = []
-
-while (datetime.datetime.now() - start).seconds < 5:
-    ret, img = cap.read()
-    if not ret:
-        print("Nie udało się odczytać obrazu z kamery.")
-        continue
-
-    # Detekcja kodów QR za pomocą pyzbar
-    rois = detect_qr(img, margin=10)
-    FinalDetectionROIs.append(rois)
-    counter += 1
-
-
-
-MaxQRDetected = 0
-for idx, x in enumerate(FinalDetectionROIs):
-    if len(x) > MaxQRDetected:
-        MaxQRDetected = len(x)
-    else:
-        FinalDetectionROIs.remove(x)
-
-   
-FinalDetectionROIs = FinalDetectionROIs.pop()
-
-# Wyświetlenie wyników
-print(FinalDetectionROIs)
-print(f"Max Wykrytych Kodow {MaxQRDetected}")
-print(counter)
-
-# Zapis ostatniego obrazu
-
-
-cap.release()
-
+#
+# # Inicjalizacja kamery
+# #dla linuxa
+# cap = cv2.VideoCapture(0)
+# #dla windowsa
+# #cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+# cap.set(cv2.CAP_PROP_FPS, 10)
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+#
+# while not cap.isOpened():
+#     print("czekam na otwarcie kamery")
+#
+# start = datetime.datetime.now()
+# counter = 0
+# FinalDetectionROIs = []
+#
+# while (datetime.datetime.now() - start).seconds < 5:
+#     ret, img = cap.read()
+#     if not ret:
+#         print("Nie udało się odczytać obrazu z kamery.")
+#         continue
+#
+#     # Detekcja kodów QR za pomocą pyzbar
+#     rois = detect_qr(img, margin=10)
+#     FinalDetectionROIs.append(rois)
+#     counter += 1
+#
+#
+#
+# MaxQRDetected = 0
+# for idx, x in enumerate(FinalDetectionROIs):
+#     if len(x) > MaxQRDetected:
+#         MaxQRDetected = len(x)
+#     else:
+#         FinalDetectionROIs.remove(x)
+#
+#
+# FinalDetectionROIs = FinalDetectionROIs.pop()
+#
+# # Wyświetlenie wyników
+# print(FinalDetectionROIs)
+# print(f"Max Wykrytych Kodow {MaxQRDetected}")
+# print(counter)
+#
+# # Zapis ostatniego obrazu
+#
+#
+# cap.release()
+#
