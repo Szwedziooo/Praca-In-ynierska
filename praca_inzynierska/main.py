@@ -53,7 +53,7 @@ def optical_procesing():
             if ret:
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
-                    detected = decode(img, symbols=[ZBarSymbol.QRCODE])
+                    detected = decode(tmp_frame, symbols=[ZBarSymbol.QRCODE])
 
                     if not detected:
                         scaned_qr_zones_bools[idx] = False
