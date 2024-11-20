@@ -1,18 +1,14 @@
 import time
-from operator import truediv
 
 import cv2
 import numpy as np
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, Response
 import threading as th
-from enum import Enum
 from playground import detect_qr
 import datetime
 import os
 
-
 app = Flask(__name__)
-
 
 #dla linuxa
 cap = cv2.VideoCapture(0)
@@ -39,19 +35,24 @@ global_detection_mode = 0
 
 set_start_time = 1
 start_time = datetime.datetime.now()
+start_time1 = datetime.datetime.now()
 
 
 def optical_procesing():
-    global global_frame, global_detection_mode, ROIs, ROIs_temp, set_start_time, start_time
+    global global_frame, global_detection_mode, ROIs, ROIs_temp, set_start_time, start_time, start_time1
     while True:
         # Pobierz klatkę z kamery
-        ret, frame = cap.read()     
+        start_time1 = datetime.datetime.now()
+        ret, frame = cap.read()
+        print(datetime.datetime.now())
+
        
         if global_detection_mode == 0:
             if ret:
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
                     ret_qr, decoded_info, points, _ = qcd.detectAndDecodeMulti(tmp_frame)
+
                     if ret_qr:
                         scaned_qr_zones_bools[idx] = True
                         scaned_qr_zones_str[idx] = decoded_info
@@ -96,10 +97,11 @@ def optical_procesing():
                 ROIs = ROIs_temp.pop()
                 set_start_time = 1
                 global_detection_mode = 0
+    print((datetime.datetime.now() - start_time1).microseconds)
 
 def debuging():
     global ROIs, scaned_qr_zones_bools, scaned_qr_zones_str
-    while True:
+    while False:
         print(ROIs)
         print(scaned_qr_zones_bools)
         print(scaned_qr_zones_str)
