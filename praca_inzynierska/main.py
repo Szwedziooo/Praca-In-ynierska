@@ -1,3 +1,4 @@
+import time
 from operator import truediv
 
 import cv2
@@ -103,6 +104,7 @@ def debuging():
         print(scaned_qr_zones_bools)
         print(scaned_qr_zones_str)
         os.system("clear")
+        time.sleep(100)
 
             
 def generate_frame_www():
