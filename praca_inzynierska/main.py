@@ -103,8 +103,8 @@ def debuging():
         print(ROIs)
         print(scaned_qr_zones_bools)
         print(scaned_qr_zones_str)
-        os.system("clear")
         time.sleep(1)
+        os.system("clear")
 
             
 def generate_frame_www():
