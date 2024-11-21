@@ -114,7 +114,12 @@ def generate_frame_www():
             if frame_lock is None: 
                 frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
             else:
-                frame = global_frame.copy() 
+                frame = global_frame.copy()
+
+        kernel = np.array([[0, -1, 0],
+                           [-1, 5, -1],
+                           [0, -1, 0]])
+        frame = cv2.filter2D(frame, -1, kernel)
 
         for idx, (x, y, w, h) in enumerate(ROIs):
             cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
@@ -124,6 +129,7 @@ def generate_frame_www():
 
         if not ret:
             continue
+
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
