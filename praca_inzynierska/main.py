@@ -75,8 +75,11 @@ def optical_procesing():
                     print("Nie udało się odczytać obrazu z kamery.")
                     continue
 
+                #skala szarości
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
                 #wyostrzenie obrazu
-                img = cv2.GaussianBlur(img, (5, 5), 0)
+                #img = cv2.GaussianBlur(img, (5, 5), 0)
 
                 # Detekcja kodów QR za pomocą pyzbar
                 rois = detect_qr(img, margin=8)
