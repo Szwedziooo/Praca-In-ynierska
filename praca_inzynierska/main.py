@@ -78,6 +78,9 @@ def optical_procesing():
                 #skala szarości
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+                #zmiana kontrastu
+                img = cv2.equalizeHist(img)
+
                 #wyostrzenie obrazu
                 #img = cv2.GaussianBlur(img, (5, 5), 0)
 
@@ -116,7 +119,11 @@ def generate_frame_www():
             else:
                 frame = global_frame.copy()
 
-        frame = cv2.GaussianBlur(frame, (5, 5), 0)
+        # skala szarości
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # zmiana kontrastu
+        frame = cv2.equalizeHist(frame)
 
         for idx, (x, y, w, h) in enumerate(ROIs):
             cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
