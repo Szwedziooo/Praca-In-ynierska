@@ -17,7 +17,7 @@ cap = cv2.VideoCapture(0)
 #dla windowsa
 #cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
-cap.set(cv2.CAP_PROP_FPS, 5)
+cap.set(cv2.CAP_PROP_FPS, 10)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
@@ -26,8 +26,8 @@ qcd = cv2.QRCodeDetector()
 
 ROIs = [(1026, 599, 155, 155), (714, 557, 196, 193), (1083, 346, 137, 133), (779, 309, 178, 170), (841, 76, 159, 148)]
 ROIs_temp = []
-scaned_qr_zones_bools = [False] * 30
-scaned_qr_zones_str = [""] * 30
+scanned_qr_zones_bools = [False] * 30
+scanned_qr_zones_str = [""] * 30
 
 
 global_frame = None
@@ -37,18 +37,14 @@ global_detection_mode = 0
 
 set_start_time = 1
 start_time = datetime.datetime.now()
-start_time1 = datetime.datetime.now()
 
 
 def optical_procesing():
-    global global_frame, global_detection_mode, ROIs, ROIs_temp, set_start_time, start_time, start_time1
+    global global_frame, global_detection_mode, ROIs, ROIs_temp, set_start_time, start_time
     while True:
         # Pobierz klatkę z kamery
-        start_time1 = datetime.datetime.now()
         ret, frame = cap.read()
-        print(datetime.datetime.now())
 
-       
         if global_detection_mode == 0:
             if ret:
                 for idx, (x,y,w,h) in enumerate(ROIs):
@@ -56,22 +52,22 @@ def optical_procesing():
                     detected = decode(tmp_frame, symbols=[ZBarSymbol.QRCODE])
 
                     if not detected:
-                        scaned_qr_zones_bools[idx] = False
-                        scaned_qr_zones_str[idx] = ""
+                        scanned_qr_zones_bools[idx] = False
+                        scanned_qr_zones_str[idx] = ""
                     else:
-                        scaned_qr_zones_bools[idx] = True
-                        scaned_qr_zones_str[idx] = detected[0].data
+                        scanned_qr_zones_bools[idx] = True
+                        scanned_qr_zones_str[idx] = detected[0].data
                         frame = cv2.polylines(frame, [np.array(detected[0].polygon, dtype=np.int32) + np.array((x,y))], True,(0, 255, 0), 5)
                         frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 255, 0),2)
-                    with frame_lock:
-                        global_frame = frame.copy()
+            with frame_lock:
+                global_frame = frame.copy()
 
         elif global_detection_mode == 1:
             if set_start_time:
                 start_time = datetime.datetime.now()
                 set_start_time = 0
                 ROIs_temp.clear()
-                print((datetime.datetime.now() - start_time).seconds)
+
 
             if (datetime.datetime.now() - start_time).seconds < 5:
                 ret, img = cap.read()
@@ -80,9 +76,9 @@ def optical_procesing():
                     continue
 
                 # Detekcja kodów QR za pomocą pyzbar
-                rois = detect_qr(img, margin=10)
+                rois = detect_qr(img, margin=8)
                 ROIs_temp.append(rois)
-           
+
             else:
                 MaxQRDetected = 0
                 for idx, x in enumerate(ROIs_temp):
@@ -94,14 +90,14 @@ def optical_procesing():
                 ROIs = ROIs_temp.pop()
                 set_start_time = 1
                 global_detection_mode = 0
-    print("czas:",(datetime.datetime.now() - start_time1).microseconds)
+
 
 def debuging():
-    global ROIs, scaned_qr_zones_bools, scaned_qr_zones_str
-    while False:
+    global ROIs, scanned_qr_zones_bools, scanned_qr_zones_str
+    while True:
         print(ROIs)
-        print(scaned_qr_zones_bools)
-        print(scaned_qr_zones_str)
+        print(scanned_qr_zones_bools)
+        print(scanned_qr_zones_str)
         time.sleep(1)
         os.system("clear")
 
