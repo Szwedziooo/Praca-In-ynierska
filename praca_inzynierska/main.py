@@ -76,13 +76,10 @@ def optical_procesing():
                     continue
 
                 #wyostrzenie obrazu
-                kernel = np.array([[0, -1, 0],
-                                   [-1, 5, -1],
-                                   [0, -1, 0]])
-                sharpened = cv2.filter2D(img, -1, kernel)
+                img = cv2.GaussianBlur(img, (5, 5), 0)
 
                 # Detekcja kodów QR za pomocą pyzbar
-                rois = detect_qr(sharpened, margin=8)
+                rois = detect_qr(img, margin=8)
                 ROIs_temp.append(rois)
 
             else:
@@ -116,10 +113,7 @@ def generate_frame_www():
             else:
                 frame = global_frame.copy()
 
-        kernel = np.array([[0, -1, 0],
-                           [-1, 5, -1],
-                           [0, -1, 0]])
-        frame = cv2.filter2D(frame, -1, kernel)
+        frame = cv2.GaussianBlur(frame, (5, 5), 0)
 
         for idx, (x, y, w, h) in enumerate(ROIs):
             cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
