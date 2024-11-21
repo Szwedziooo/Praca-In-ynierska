@@ -75,8 +75,14 @@ def optical_procesing():
                     print("Nie udało się odczytać obrazu z kamery.")
                     continue
 
+                #wyostrzenie obrazu
+                kernel = np.array([[0, -1, 0],
+                                   [-1, 5, -1],
+                                   [0, -1, 0]])
+                sharpened = cv2.filter2D(img, -1, kernel)
+
                 # Detekcja kodów QR za pomocą pyzbar
-                rois = detect_qr(img, margin=8)
+                rois = detect_qr(sharpened, margin=8)
                 ROIs_temp.append(rois)
 
             else:
