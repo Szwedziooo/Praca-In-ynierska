@@ -11,16 +11,16 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-            /* Styl dla trybu jasnego */
-            body.light-mode {
-                background-color: #f0f0f0;
-                color: #333;
-            }
-
             /* Styl dla trybu ciemnego */
             body.dark-mode {
                 background-color: #333;
                 color: #f0f0f0;
+            }
+
+            /* Styl dla trybu jasnego */
+            body.light-mode {
+                background-color: #f0f0f0;
+                color: #333;
             }
 
         h2 {
@@ -70,10 +70,13 @@
             float: left;
             align-items: center;
         }
+        .conf_box{
+
+        }
 
     </style>
 </head>
-<body class="light-mode">
+<body class="dark-mode">
     <div>
         <h2>Podgląd z kamery</h2>
         <!-- Przycisk do zmiany trybu jasny/ciemny -->
@@ -83,16 +86,31 @@
             <img src="{{ url_for('video_feed') }}" alt="Podgląd kamery" />
         </div>
 
-        <div id="conf_box">
+        <div id="conf_box1">
             <p>Wybierz tryb:</p>
-            <form action="/" method="post"55555>
+            <form method="POST">
                 <select name="tryby">
                     <option value="0">Wykrywanie</option>
                     <option value="1">Ustawienie ROIs</option>
                 </select>
-                <button type="submit">Wyślij</button>
-
+                <button type="submit" name="form" value="tryby">Zatwierdź</button>
             </form>
+        </div>
+
+        <div id="conf_box2">
+        <form method="POST">
+            <label> Skala szarości </label>
+            <input type="checkbox" value="1" name="grayscale">
+            <button type="submit" name="form" value="grayscale">Zatwierdź</button>
+        </form>
+        </div>
+
+        <div id="conf_box3">
+        <form method="POST">
+            <label> Debugowanie </label>
+            <input type="checkbox" value="1" name="debug">
+            <button type="submit" name="form" value="debug">Zatwierdź</button>
+        </form>
         </div>
     </div>
     

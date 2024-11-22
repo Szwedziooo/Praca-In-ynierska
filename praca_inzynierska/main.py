@@ -1,3 +1,4 @@
+import platform
 import time
 import cv2
 import numpy as np
@@ -12,10 +13,15 @@ from detect_rq import detect_qr
 
 app = Flask(__name__)
 
-#dla linuxa
-cap = cv2.VideoCapture(0)
-#dla windowsa
-#cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+
+cap = []
+if platform.system() == "Linux":
+    # dla linuxa
+    cap = cv2.VideoCapture(0)
+elif platform.system() == "Windows":
+    # dla windowsa
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
 
 cap.set(cv2.CAP_PROP_FPS, 20)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
@@ -34,13 +40,15 @@ global_frame = None
 frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
 
 global_detection_mode = 0
+global_grayscale_mode = 0
+global_debug_mode = 0
 
 set_start_time = 1
 start_time = datetime.datetime.now()
 
 
 def optical_procesing():
-    global global_frame, global_detection_mode, ROIs, ROIs_temp, set_start_time, start_time
+    global global_frame, global_detection_mode, global_grayscale_mode, ROIs, ROIs_temp, set_start_time, start_time
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
@@ -76,7 +84,8 @@ def optical_procesing():
                     continue
 
                 #skala szarości
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                if global_grayscale_mode:
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
                 #wyostrzenie obrazu
                 #img = cv2.GaussianBlur(img, (5, 5), 0)
@@ -99,13 +108,17 @@ def optical_procesing():
 
 
 def debuging():
-    global ROIs, scanned_qr_zones_bools, scanned_qr_zones_str
+    global ROIs, scanned_qr_zones_bools, scanned_qr_zones_str, global_debug_mode
     while True:
-        print(ROIs)
-        print(scanned_qr_zones_bools)
-        print(scanned_qr_zones_str)
-        time.sleep(1)
-        os.system("clear")
+        if global_debug_mode:
+            time.sleep(1)
+            print(ROIs)
+            print(scanned_qr_zones_bools)
+            print(scanned_qr_zones_str)
+            if platform.system() == "Linux":
+                os.system("clear")
+            elif platform.system() == "Windows":
+                os.system("cls")
 
             
 def generate_frame_www():
@@ -117,7 +130,8 @@ def generate_frame_www():
                 frame = global_frame.copy()
 
         # skala szarości
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if global_grayscale_mode:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         for idx, (x, y, w, h) in enumerate(ROIs):
             cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
@@ -134,27 +148,32 @@ def generate_frame_www():
 
 
             
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['POST', 'GET'])
 def index():
-    global global_detection_mode
-    # Główna strona, która wyświetli podgląd z kamery
+    global global_detection_mode, global_grayscale_mode, global_debug_mode
 
-    response_message = ""
     if request.method == 'POST':
-        # Odczytanie wartości z <select>
-        selected_value = request.form.get('tryby')
-        response_message = f"Wybrano opcję: {selected_value}"
-        global_detection_mode = int(selected_value)
+        form = request.form.get('form')
 
+        #Odczyt wartści dla trybu detekcji
+        if form == "tryby":
+            global_detection_mode = int(request.form.get('tryby', default=0))
 
-    return render_template('index.html', response_message=response_message)
+        #Odczyt wartości dla skali szarości
+        elif form == "grayscale":
+            global_grayscale_mode = int(request.form.get('grayscale', default=0))
+
+        #Odczyt wartości dla trybu debug
+        elif form == "debug":
+            global_debug_mode = int(request.form.get('debug', default=0))
+
+    return render_template('index.html')
 
 
 @app.route('/video_feed')
 def video_feed():
     # Endpoint do przesyłania strumienia wideo
     return Response(generate_frame_www(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
 
 
 threads = [
