@@ -21,7 +21,7 @@ def communication_Snap7(IP, DB_number, DB_start_byte, bool_values_to_send):
                 byte_offset = index // 8  # Byte index
                 bit_offset = index % 8    # Bit index within the byte
                 set_bool(buffer, byte_offset, bit_offset, flag)
-            plc_client.db_write(db_index, start_position, buffer)
+            plc_client.db_write(DB_number, DB_start_byte, buffer)
             print(f"Boolean sent to PLC in DB {DB_number} starting from byte {DB_start_byte}")
         else:
             print("Connection to PLC S7-1200 failed")

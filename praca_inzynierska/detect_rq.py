@@ -19,3 +19,4 @@ def detect_qr(img, margin=10):
     rois.sort(key=lambda x: (-x[1], x[0]))
 
     return rois
+

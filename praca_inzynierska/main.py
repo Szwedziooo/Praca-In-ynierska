@@ -10,6 +10,7 @@ from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
 from detect_rq import detect_qr
 from write_config import write_config
+from communication import communication_MODBUS_TCP
 
 app = Flask(__name__)
 
@@ -30,8 +31,8 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 ROIs = [(1026, 599, 155, 155), (714, 557, 196, 193), (1083, 346, 137, 133), (779, 309, 178, 170), (841, 76, 159, 148)]
 ROIs_temp = []
-scanned_qr_zones_bools = [False] * 30
-scanned_qr_zones_str = [""] * 30
+scanned_qr_zones_bools = [False] * 15
+scanned_qr_zones_str = [""] * 15
 
 
 global_frame = None
@@ -146,6 +147,11 @@ def generate_frame_www():
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
+def comm():
+    global scanned_qr_zones_bools
+    while True:
+        communication_MODBUS_TCP(scanned_qr_zones_bools,"192.168.10.10","502")
+
 
             
 @app.route('/', methods=['POST', 'GET'])
@@ -183,7 +189,8 @@ def video_feed():
 threads = [
     th.Thread(target=optical_procesing, daemon=True),
     th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True),
-    th.Thread(target=debuging, daemon=True)
+    th.Thread(target=debuging, daemon=True),
+    th.Thread(target=comm(), daemon=True)
 ]
 
 if __name__ == "__main__":
