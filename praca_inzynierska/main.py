@@ -121,7 +121,7 @@ def debuging():
             elif platform.system() == "Windows":
                 os.system("cls")
 
-            
+#test commita
 def generate_frame_www():
     while True:
         with frame_lock:
