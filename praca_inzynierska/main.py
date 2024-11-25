@@ -14,7 +14,7 @@ from detect_rq import detect_qr
 app = Flask(__name__)
 
 
-cap = []
+cap = cv2.VideoCapture
 if platform.system() == "Linux":
     # dla linuxa
     cap = cv2.VideoCapture(0)
@@ -26,8 +26,6 @@ elif platform.system() == "Windows":
 cap.set(cv2.CAP_PROP_FPS, 20)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
-qcd = cv2.QRCodeDetector()
 
 
 ROIs = [(1026, 599, 155, 155), (714, 557, 196, 193), (1083, 346, 137, 133), (779, 309, 178, 170), (841, 76, 159, 148)]
@@ -42,13 +40,14 @@ frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
 global_detection_mode = 0
 global_grayscale_mode = 0
 global_debug_mode = 0
+global_margin = 10
 
 set_start_time = 1
 start_time = datetime.datetime.now()
 
 
 def optical_procesing():
-    global global_frame, global_detection_mode, global_grayscale_mode, ROIs, ROIs_temp, set_start_time, start_time
+    global global_frame, global_detection_mode, global_grayscale_mode, ROIs, ROIs_temp, set_start_time, start_time, global_margin
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
@@ -76,7 +75,6 @@ def optical_procesing():
                 set_start_time = 0
                 ROIs_temp.clear()
 
-
             if (datetime.datetime.now() - start_time).seconds < 5:
                 ret, img = cap.read()
                 if not ret:
@@ -91,7 +89,7 @@ def optical_procesing():
                 #img = cv2.GaussianBlur(img, (5, 5), 0)
 
                 # Detekcja kodów QR za pomocą pyzbar
-                rois = detect_qr(img, margin=8)
+                rois = detect_qr(img, margin=global_margin)
                 ROIs_temp.append(rois)
 
             else:
@@ -115,6 +113,7 @@ def debuging():
             print(ROIs)
             print(scanned_qr_zones_bools)
             print(scanned_qr_zones_str)
+
             if platform.system() == "Linux":
                 os.system("clear")
             elif platform.system() == "Windows":
@@ -150,7 +149,7 @@ def generate_frame_www():
             
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    global global_detection_mode, global_grayscale_mode, global_debug_mode
+    global global_detection_mode, global_grayscale_mode, global_debug_mode, global_margin
 
     if request.method == 'POST':
         form = request.form.get('form')
@@ -166,6 +165,10 @@ def index():
         #Odczyt wartości dla trybu debug
         elif form == "debug":
             global_debug_mode = int(request.form.get('debug', default=0))
+
+        #Odczyt wartości marginesu dla kodów QR
+        elif form == "margin":
+            global_margin = int(request.form.get('margin', default=0))
 
     return render_template('index.html')
 
@@ -188,6 +191,3 @@ if __name__ == "__main__":
 
    for t in threads:
        t.join()
-
-
-
