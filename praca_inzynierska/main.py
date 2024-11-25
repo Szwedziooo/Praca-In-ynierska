@@ -151,6 +151,7 @@ def comm():
     global scanned_qr_zones_bools
     while True:
         communication_MODBUS_TCP(scanned_qr_zones_bools,"192.168.10.10","502")
+        time.sleep(1)
 
 
             
