@@ -191,7 +191,7 @@ threads = [
     th.Thread(target=optical_procesing, daemon=True),
     th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True),
     th.Thread(target=debuging, daemon=True),
-    th.Thread(target=comm(), daemon=True)
+    th.Thread(target=comm, daemon=True)
 ]
 
 if __name__ == "__main__":
