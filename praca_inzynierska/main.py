@@ -9,7 +9,7 @@ import os
 from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
 from detect_rq import detect_qr
-
+from write_config import write_config
 
 app = Flask(__name__)
 
@@ -75,7 +75,7 @@ def optical_procesing():
                 set_start_time = 0
                 ROIs_temp.clear()
 
-            if (datetime.datetime.now() - start_time).seconds < 5:
+            if (datetime.datetime.now() - start_time).seconds < 10:
                 ret, img = cap.read()
                 if not ret:
                     print("Nie udało się odczytać obrazu z kamery.")
@@ -103,6 +103,7 @@ def optical_procesing():
                 ROIs = ROIs_temp.pop()
                 set_start_time = 1
                 global_detection_mode = 0
+
 
 
 def debuging():

@@ -60,24 +60,24 @@ def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
     else:
         print("Modbus connection failed")
 
-
-if __name__ == '__main__':
-
-    # Coonnection configuration
-    plc_ip_address = '192.168.10.10'
-
-    # MODBUS TCP CONFIGURATION
-    port = 502  # Default port Modbus TCP/IP
-
-    # WAREHOUSE STATE
-    warehouse_cells = [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0]
-
-    # SNAP7 CONFIGURATION
-    db_index = 16  # Data block number
-    start_position = 0  # Starting byte in the data block
-
-    # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
-    communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
-
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+#
+# if __name__ == '__main__':
+#
+#     # Coonnection configuration
+#     plc_ip_address = '192.168.10.10'
+#
+#     # MODBUS TCP CONFIGURATION
+#     port = 502  # Default port Modbus TCP/IP
+#
+#     # WAREHOUSE STATE
+#     warehouse_cells = [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0]
+#
+#     # SNAP7 CONFIGURATION
+#     db_index = 16  # Data block number
+#     start_position = 0  # Starting byte in the data block
+#
+#     # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
+#     communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
+#
+#
+# # See PyCharm help at https://www.jetbrains.com/help/pycharm/
