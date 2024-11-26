@@ -6,9 +6,11 @@ from snap7.util import *
 from pymodbus.client import ModbusTcpClient
 
 
+
 def communication_Snap7(IP, DB_number, DB_start_byte, bool_values_to_send):
     print("Connection between Raspberry PI 4 and PLC SIEMENS s7-1200 via Snap7 Driver")
     plc_client = snap7.client.Client()
+
     try:
         plc_client.connect(IP, rack=0, slot=1)  # Default hardware configuration for PLC S7-1200
 
@@ -39,13 +41,20 @@ def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
         print("Connected with PLC s7-1200")
 
         # Reading holding registers from adress 0 - lenght 12
-        result = client.read_holding_registers(0, 12)
+        result = client.read_holding_registers(0, 21)
+        inspection_ON = result.registers[20]
+
+
+        #wykonanie inspekcji
 
         if result.isError():
             print("Reading ERROR:", result)
         else:
             print("Read values:", result.registers)
+            print(f"Inspection ON: {inspection_ON}")
 
+
+        #przypisujemy wartosci magazynu
         # (holding register nr, value)
         write_result = client.write_registers(0, values_to_send)
 
@@ -54,30 +63,40 @@ def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
         else:
             print("Succesfully sent data to PLC")
 
+
+
+        write_register_19 = client.write_register(19,1)
+        inspection_Finished = result.registers[19]
+
+        if write_register_19.isError():
+            print("Sending register 19 failed")
+        else:
+            print("Register 19 value")
+
         # Zakonczenie polaczenia
         client.close()
 
     else:
         print("Modbus connection failed")
 
-#
-# if __name__ == '__main__':
-#
-#     # Coonnection configuration
-#     plc_ip_address = '192.168.10.10'
-#
-#     # MODBUS TCP CONFIGURATION
-#     port = 502  # Default port Modbus TCP/IP
-#
-#     # WAREHOUSE STATE
-#     warehouse_cells = [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0]
-#
-#     # SNAP7 CONFIGURATION
-#     db_index = 16  # Data block number
-#     start_position = 0  # Starting byte in the data block
-#
-#     # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
-#     communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
-#
-#
-# # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+if __name__ == '__main__':
+
+    # Coonnection configuration
+    plc_ip_address = '192.168.10.10'
+
+    # MODBUS TCP CONFIGURATION
+    port = 502  # Default port Modbus TCP/IP
+
+    # WAREHOUSE STATE
+    warehouse_cells = [0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+
+    # SNAP7 CONFIGURATION
+    db_index = 20  # Data block number
+    start_position = 0  # Starting byte in the data block
+
+    communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
+    # communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
+
+
+# See PyCharm help at https://www.jetbrains.com/help/pycharm/
