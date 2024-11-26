@@ -113,7 +113,7 @@ def optical_procesing():
                         ROIs_temp.remove(x)
 
                 ROIs = ROIs_temp.pop()
-                write_config("configs\\rois.json",ROIs)
+                write_config("configs/rois.json",ROIs)
                 set_start_time = 1
                 config["global_detection_mode"] = 0
 
@@ -207,17 +207,17 @@ threads = [
 
 if __name__ == "__main__":
     #Wczytanie konfiguracji
-    if os.path.exists("configs\\config.json"):
-        config = read_config("configs\\config.json")
+    if os.path.exists("configs/config.json"):
+        config = read_config("configs/config.json")
         print(config)
     else:
-        write_config("configs\\config.json", config)
+        write_config("configs/config.json", config)
 
     #Wczytanie zapisanych punktów ROI
-    if os.path.exists("configs\\rois.json"):
-        ROIs = read_config("configs\\rois.json")
+    if os.path.exists("configs/rois.json"):
+        ROIs = read_config("configs/rois.json")
     else:
-        write_config("configs\\rois.json", ROIs)
+        write_config("configs/rois.json", ROIs)
 
 
     #Rozpoczęcie wątków
