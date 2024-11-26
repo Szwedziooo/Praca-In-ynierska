@@ -143,7 +143,6 @@ def generate_frame_www():
             else:
                 frame = global_frame.copy()
 
-        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         # skala szarości
         if config["global_grayscale_mode"]:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
