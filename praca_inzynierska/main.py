@@ -55,9 +55,6 @@ config = {
 set_start_time = 1
 start_time = datetime.datetime.now()
 
-set_start_time_2 = 1
-start_time_2 = datetime.datetime.now()
-
 
 def optical_procesing():
     global global_frame, global_margin, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection_ON, start_time_2, set_start_time_2
@@ -82,22 +79,6 @@ def optical_procesing():
                         scanned_qr_zones_str[idx] = detected[0].data
                         frame = cv2.polylines(frame, [np.array(detected[0].polygon, dtype=np.int32) + np.array((x,y))], True,(0, 255, 0), 5)
                         frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 255, 0),2)
-
-            if inspection_ON:
-                print("XD1")
-                if set_start_time_2:
-                    start_time_2 = datetime.datetime.now()
-                    set_start_time_2 = 0
-                    scanned_qr_zones_bools_final = [False] * 20
-
-                if (datetime.datetime.now() - start_time_2).seconds <= 3:
-                    print("XD")
-                    for idx, q in enumerate(scanned_qr_zones_bools_final):
-                        if scanned_qr_zones_bools[idx]:
-                            q = True
-                else:
-                    inspection_ON = False
-                    set_start_time_2 = 1
 
             with frame_lock:
                 global_frame = frame.copy()
