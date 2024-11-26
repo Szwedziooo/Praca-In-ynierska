@@ -33,8 +33,8 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1920)
 
 ROIs = [(10, 10, 155, 155)]
 ROIs_temp = []
-scanned_qr_zones_bools = [False] * 15
-scanned_qr_zones_str = [""] * 15
+scanned_qr_zones_bools = [False] * 20
+scanned_qr_zones_str = [""] * 20
 
 
 global_frame = None
