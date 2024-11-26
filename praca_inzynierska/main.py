@@ -217,7 +217,7 @@ if __name__ == "__main__":
     if os.path.exists("configs\\rois.json"):
         ROIs = read_config("configs\\rois.json")
     else:
-        ROIs = write_config("configs\\rois.json", ROIs)
+        write_config("configs\\rois.json", ROIs)
 
 
     #Rozpoczęcie wątków
