@@ -90,6 +90,7 @@ def optical_procesing():
                     scanned_qr_zones_bools_final = [False] * 20
 
                 if (datetime.datetime.now() - start_time_2).seconds <= 3:
+                    print("XD")
                     for idx, q in enumerate(scanned_qr_zones_bools_final):
                         if scanned_qr_zones_bools[idx]:
                             q = True
