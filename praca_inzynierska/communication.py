@@ -5,6 +5,7 @@ import snap7
 from snap7.util import *
 from pymodbus.client import ModbusTcpClient
 
+inspection_ON = 0
 
 
 def communication_Snap7(IP, DB_number, DB_start_byte, bool_values_to_send):
@@ -32,6 +33,7 @@ def communication_Snap7(IP, DB_number, DB_start_byte, bool_values_to_send):
 
 
 def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
+    global inspection_ON
 
     # Modbus TCP Client
     client = ModbusTcpClient(plc_ip, port=default_port)
@@ -44,9 +46,7 @@ def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
         result = client.read_holding_registers(0, 21)
         inspection_ON = result.registers[20]
 
-
         #wykonanie inspekcji
-
         if result.isError():
             print("Reading ERROR:", result)
         else:
@@ -80,23 +80,25 @@ def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
         print("Modbus connection failed")
 
 
-if __name__ == '__main__':
-
-    # Coonnection configuration
-    plc_ip_address = '192.168.10.10'
-
-    # MODBUS TCP CONFIGURATION
-    port = 502  # Default port Modbus TCP/IP
-
-    # WAREHOUSE STATE
-    warehouse_cells = [0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-
-    # SNAP7 CONFIGURATION
-    db_index = 20  # Data block number
-    start_position = 0  # Starting byte in the data block
-
-    communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
-    # communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
 
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# if __name__ == '__main__':
+#
+#     # Coonnection configuration
+#     plc_ip_address = '192.168.10.10'
+#
+#     # MODBUS TCP CONFIGURATION
+#     port = 502  # Default port Modbus TCP/IP
+#
+#     # WAREHOUSE STATE
+#     warehouse_cells = [0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+#
+#     # SNAP7 CONFIGURATION
+#     db_index = 20  # Data block number
+#     start_position = 0  # Starting byte in the data block
+#
+#     communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
+#     # communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
+#
+#
+# # See PyCharm help at https://www.jetbrains.com/help/pycharm/

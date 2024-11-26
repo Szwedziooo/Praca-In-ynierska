@@ -64,14 +64,13 @@ def optical_procesing():
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
-
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
         if config["global_detection_mode"] == 0:
             if ret:
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
                     detected = decode(tmp_frame, symbols=[ZBarSymbol.QRCODE])
-
                     if not detected:
                         scanned_qr_zones_bools[idx] = False
                         scanned_qr_zones_str[idx] = ""
@@ -82,6 +81,7 @@ def optical_procesing():
                         frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 255, 0),2)
             with frame_lock:
                 global_frame = frame.copy()
+
 
         elif config["global_detection_mode"] == 1:
             if set_start_time:
