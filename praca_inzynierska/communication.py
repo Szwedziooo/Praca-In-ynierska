@@ -6,11 +6,9 @@ from snap7.util import *
 from pymodbus.client import ModbusTcpClient
 
 
-
 def communication_Snap7(IP, DB_number, DB_start_byte, bool_values_to_send):
     print("Connection between Raspberry PI 4 and PLC SIEMENS s7-1200 via Snap7 Driver")
     plc_client = snap7.client.Client()
-
     try:
         plc_client.connect(IP, rack=0, slot=1)  # Default hardware configuration for PLC S7-1200
 
@@ -23,7 +21,7 @@ def communication_Snap7(IP, DB_number, DB_start_byte, bool_values_to_send):
                 byte_offset = index // 8  # Byte index
                 bit_offset = index % 8    # Bit index within the byte
                 set_bool(buffer, byte_offset, bit_offset, flag)
-            plc_client.db_write(DB_number, DB_start_byte, buffer)
+            plc_client.db_write(db_index, start_position, buffer)
             print(f"Boolean sent to PLC in DB {DB_number} starting from byte {DB_start_byte}")
         else:
             print("Connection to PLC S7-1200 failed")
@@ -31,54 +29,61 @@ def communication_Snap7(IP, DB_number, DB_start_byte, bool_values_to_send):
         plc_client.disconnect()
 
 
-def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
+def modbus_TCP_send_holding_registers(plc_ip, default_port, HR_start_idx, values):
 
-    # Modbus TCP Client
-    client = ModbusTcpClient(plc_ip, port=default_port)
-    print("Connection between Raspberry PI 4 -> PLC SIEMENS s7-1200 through MODBUS TCP/IP ")
+    data_sent = False
+    client = ModbusTcpClient(host=plc_ip, port=default_port)
 
-    if client.connect():
-        print("Connected with PLC s7-1200")
-
-        # Reading holding registers from adress 0 - lenght 12
-        result = client.read_holding_registers(0, 21)
-        inspection_ON = result.registers[20]
-
-
-        #wykonanie inspekcji
-
-        if result.isError():
-            print("Reading ERROR:", result)
+    try:
+        if client.connect():
+            print(f"PLC connected via MODBUS")
+            send_result = client.write_registers(HR_start_idx, values)
+            if send_result.isError():
+                print("ERROR sending DATA")
+                data_sent = False
+            else:
+                print("DATA has been sent successfully")
+                data_sent = True
         else:
-            print("Read values:", result.registers)
-            print(f"Inspection ON: {inspection_ON}")
+            print("Connection via MODBUS failed")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
-
-        #przypisujemy wartosci magazynu
-        # (holding register nr, value)
-        write_result = client.write_registers(0, values_to_send)
-
-        if write_result.isError():
-            print("Sending data to reg ERROR:", write_result)
-        else:
-            print("Succesfully sent data to PLC")
-
-
-
-        write_register_19 = client.write_register(19,1)
-        inspection_Finished = result.registers[19]
-
-        if write_register_19.isError():
-            print("Sending register 19 failed")
-        else:
-            print("Register 19 value")
-
-        # Zakonczenie polaczenia
+    finally:
         client.close()
 
-    else:
-        print("Modbus connection failed")
+    return data_sent
 
+
+def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count):
+
+    data_read = False
+    client = ModbusTcpClient(host=plc_ip, port=default_port)
+    registers = None
+
+    try:
+        if client.connect():
+            print("PLC connected via MODBUS")
+            read_result = client.read_holding_registers(HR_start_idx, count)
+            if read_result.isError():
+                data_read = False
+                print("ERROR reading holding registers")
+            else:
+                registers = read_result.registers
+                data_read = True
+                print(f"Holding registers from {HR_start_idx}: {registers}")
+        else:
+            print("Connection via MODBUS failed")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    finally:
+        client.close()
+
+    return data_read, registers
+
+'''
+TESTOWANIE FUNKCJINALNOŚCI
+'''
 
 if __name__ == '__main__':
 
@@ -89,14 +94,20 @@ if __name__ == '__main__':
     port = 502  # Default port Modbus TCP/IP
 
     # WAREHOUSE STATE
-    warehouse_cells = [0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+    warehouse_cells = [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0]
 
     # SNAP7 CONFIGURATION
-    db_index = 20  # Data block number
+    db_index = 16  # Data block number
     start_position = 0  # Starting byte in the data block
 
-    communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
+    # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
     # communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
 
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19, values=[1,1,1,1])
+    # print(res)
+
+    read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19 , count=1)
+
+
+# # See PyCharm help at https://www.jetbrains.com/help/pycharm/
