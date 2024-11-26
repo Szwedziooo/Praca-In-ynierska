@@ -91,6 +91,7 @@ def optical_procesing():
 
             if (datetime.datetime.now() - start_time).seconds < 10:
                 ret, img = cap.read()
+                img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 if not ret:
                     print("Nie udało się odczytać obrazu z kamery.")
                     continue
