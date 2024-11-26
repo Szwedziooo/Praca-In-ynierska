@@ -43,8 +43,8 @@ def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
         print("Connected with PLC s7-1200")
 
         # Reading holding registers from adress 0 - lenght 12
-        result = client.read_holding_registers(0, 21)
-        inspection_ON = result.registers[20]
+        result = client.read_holding_registers(0, 23)
+        inspection_ON = result.registers[21]
 
         #wykonanie inspekcji
         if result.isError():
@@ -65,8 +65,7 @@ def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
 
 
 
-        write_register_19 = client.write_register(19,1)
-        inspection_Finished = result.registers[19]
+        write_register_19 = client.write_register(22,1)
 
         if write_register_19.isError():
             print("Sending register 19 failed")

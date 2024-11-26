@@ -11,7 +11,7 @@ from pyzbar.pyzbar import decode, ZBarSymbol
 from detect_rq import detect_qr
 from write_config import write_config
 from read_conifg import read_config
-from communication import communication_MODBUS_TCP
+from communication import communication_MODBUS_TCP, inspection_ON
 
 app = Flask(__name__)
 
@@ -33,19 +33,16 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1920)
 
 ROIs = [(10, 10, 155, 155)]
 ROIs_temp = []
-scanned_qr_zones_bools = [False] * 20
-scanned_qr_zones_str = [""] * 20
 
+scanned_qr_zones_bools_final = [False] * 20
 
 global_frame = None
 frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
-
 
 global_detection_mode = 0
 global_grayscale_mode = 0
 global_debug_mode = 0
 global_margin = 10
-
 
 config = {
     "global_detection_mode": 0,
@@ -58,9 +55,15 @@ config = {
 set_start_time = 1
 start_time = datetime.datetime.now()
 
+set_start_time_2 = 1
+start_time_2 = datetime.datetime.now()
+
 
 def optical_procesing():
-    global global_frame, global_margin, ROIs, ROIs_temp, set_start_time, start_time, config
+    global global_frame, global_margin, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection_ON, start_time_2, set_start_time_2
+    scanned_qr_zones_bools = [False] * 20
+    scanned_qr_zones_str = [""] * 20
+
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
@@ -79,9 +82,22 @@ def optical_procesing():
                         scanned_qr_zones_str[idx] = detected[0].data
                         frame = cv2.polylines(frame, [np.array(detected[0].polygon, dtype=np.int32) + np.array((x,y))], True,(0, 255, 0), 5)
                         frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 255, 0),2)
+
+            if inspection_ON:
+                if set_start_time_2:
+                    start_time_2 = datetime.datetime.now()
+                    set_start_time_2 = 0
+                    scanned_qr_zones_bools_final = [False] * 20
+
+                if (datetime.datetime.now() - start_time_2).seconds <= 3:
+                    for idx, q in enumerate(scanned_qr_zones_bools_final):
+                        if scanned_qr_zones_bools[idx]:
+                            q = True
+                else:
+                    inspection_ON = False
+
             with frame_lock:
                 global_frame = frame.copy()
-
 
         elif config["global_detection_mode"] == 1:
             if set_start_time:
@@ -100,8 +116,6 @@ def optical_procesing():
                 if config["global_grayscale_mode"]:
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-                #wyostrzenie obrazu
-                #img = cv2.GaussianBlur(img, (5, 5), 0)
 
                 # Detekcja kodów QR za pomocą pyzbar
                 rois = detect_qr(img, margin=config["global_margin"])
@@ -122,13 +136,12 @@ def optical_procesing():
 
 
 def debuging():
-    global ROIs, scanned_qr_zones_bools, scanned_qr_zones_str, global_debug_mode
+    global ROIs, global_debug_mode
     while True:
         if global_debug_mode:
             time.sleep(1)
             print(ROIs)
-            print(scanned_qr_zones_bools)
-            print(scanned_qr_zones_str)
+
 
             if platform.system() == "Linux":
                 os.system("clear")
@@ -162,9 +175,9 @@ def generate_frame_www():
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 def comm():
-    global scanned_qr_zones_bools
+    global scanned_qr_zones_bools_final
     while True:
-        communication_MODBUS_TCP(scanned_qr_zones_bools,"192.168.10.10","502")
+        communication_MODBUS_TCP(scanned_qr_zones_bools_final + [inspection_ON, 0],"192.168.10.10","502")
         time.sleep(1)
 
 
