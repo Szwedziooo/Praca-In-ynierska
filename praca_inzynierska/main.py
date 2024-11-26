@@ -64,7 +64,7 @@ def optical_procesing():
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
-        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
 
         if config["global_detection_mode"] == 0:
             if ret:
