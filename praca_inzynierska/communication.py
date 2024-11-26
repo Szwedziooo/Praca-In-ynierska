@@ -64,8 +64,8 @@ def communication_MODBUS_TCP(values_to_send, plc_ip, default_port):
             print("Succesfully sent data to PLC")
 
 
-
-        write_register_19 = client.write_register(22,1)
+        if not inspection_ON:
+            write_register_19 = client.write_register(22,1)
 
         if write_register_19.isError():
             print("Sending register 19 failed")

@@ -84,6 +84,7 @@ def optical_procesing():
                         frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 255, 0),2)
 
             if inspection_ON:
+                print("XD1")
                 if set_start_time_2:
                     start_time_2 = datetime.datetime.now()
                     set_start_time_2 = 0
@@ -96,6 +97,7 @@ def optical_procesing():
                             q = True
                 else:
                     inspection_ON = False
+                    set_start_time_2 = 1
 
             with frame_lock:
                 global_frame = frame.copy()
@@ -178,7 +180,7 @@ def generate_frame_www():
 def comm():
     global scanned_qr_zones_bools_final
     while True:
-        communication_MODBUS_TCP(scanned_qr_zones_bools_final + [inspection_ON, 0],"192.168.10.10","502")
+        communication_MODBUS_TCP(scanned_qr_zones_bools_final,"192.168.10.10","502")
         time.sleep(1)
 
 
