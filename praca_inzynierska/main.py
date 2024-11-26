@@ -39,11 +39,6 @@ scanned_qr_zones_bools_final = [False] * 20
 global_frame = None
 frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
 
-global_detection_mode = 0
-global_grayscale_mode = 0
-global_debug_mode = 0
-global_margin = 10
-
 config = {
     "global_detection_mode": 0,
     "global_grayscale_mode": 0,
@@ -57,7 +52,7 @@ start_time = datetime.datetime.now()
 
 
 def optical_procesing():
-    global global_frame, global_margin, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection_ON, start_time_2, set_start_time_2
+    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection_ON, start_time_2, set_start_time_2
     scanned_qr_zones_bools = [False] * 20
     scanned_qr_zones_str = [""] * 20
 
@@ -120,13 +115,11 @@ def optical_procesing():
 
 
 def debuging():
-    global ROIs, global_debug_mode
+    global ROIs
     while True:
-        if global_debug_mode:
+        if config["global_debug_mode"]:
             time.sleep(1)
             print(ROIs)
-
-
             if platform.system() == "Linux":
                 os.system("clear")
             elif platform.system() == "Windows":
@@ -168,7 +161,7 @@ def comm():
             
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    global global_detection_mode, global_grayscale_mode, global_debug_mode, global_margin, config
+    global config
 
     if request.method == 'POST':
         form = request.form.get('form')
@@ -183,11 +176,11 @@ def index():
 
         #Odczyt wartości dla trybu debug
         elif form == "debug":
-            global_debug_mode = int(request.form.get('debug', default=0))
+            config["global_debug_mode"] = int(request.form.get('debug', default=0))
 
         #Odczyt wartości marginesu dla kodów QR
         elif form == "margin":
-            global_margin = int(request.form.get('margin', default=0))
+            config["global_margin"] = int(request.form.get('margin', default=0))
 
     return render_template('index.html')
 
