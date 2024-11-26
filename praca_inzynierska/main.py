@@ -31,7 +31,7 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1920)
 
 
 
-ROIs = [(1026, 599, 155, 155), (714, 557, 196, 193), (1083, 346, 137, 133), (779, 309, 178, 170), (841, 76, 159, 148)]
+ROIs = [(10, 10, 155, 155)]
 ROIs_temp = []
 scanned_qr_zones_bools = [False] * 15
 scanned_qr_zones_str = [""] * 15
