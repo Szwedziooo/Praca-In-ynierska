@@ -30,6 +30,7 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 
+
 ROIs = [(1026, 599, 155, 155), (714, 557, 196, 193), (1083, 346, 137, 133), (779, 309, 178, 170), (841, 76, 159, 148)]
 ROIs_temp = []
 scanned_qr_zones_bools = [False] * 15
@@ -63,6 +64,7 @@ def optical_procesing():
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
         if config["global_detection_mode"] == 0:
             if ret:
@@ -141,6 +143,7 @@ def generate_frame_www():
             else:
                 frame = global_frame.copy()
 
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         # skala szarości
         if config["global_grayscale_mode"]:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
