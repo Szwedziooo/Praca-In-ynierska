@@ -10,6 +10,7 @@ from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
 from detect_rq import detect_qr
 from write_config import write_config
+from read_conifg import read_config
 from communication import communication_MODBUS_TCP
 
 app = Flask(__name__)
@@ -38,22 +39,32 @@ scanned_qr_zones_str = [""] * 15
 global_frame = None
 frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
 
+
 global_detection_mode = 0
 global_grayscale_mode = 0
 global_debug_mode = 0
 global_margin = 10
+
+
+config = {
+    "global_detection_mode": 0,
+    "global_grayscale_mode": 0,
+    "global_debug_mode": 0,
+    "global_margin": 10
+}
+
 
 set_start_time = 1
 start_time = datetime.datetime.now()
 
 
 def optical_procesing():
-    global global_frame, global_detection_mode, global_grayscale_mode, ROIs, ROIs_temp, set_start_time, start_time, global_margin
+    global global_frame, global_margin, ROIs, ROIs_temp, set_start_time, start_time, config
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
 
-        if global_detection_mode == 0:
+        if config["global_detection_mode"] == 0:
             if ret:
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
@@ -70,7 +81,7 @@ def optical_procesing():
             with frame_lock:
                 global_frame = frame.copy()
 
-        elif global_detection_mode == 1:
+        elif config["global_detection_mode"] == 1:
             if set_start_time:
                 start_time = datetime.datetime.now()
                 set_start_time = 0
@@ -83,14 +94,14 @@ def optical_procesing():
                     continue
 
                 #skala szarości
-                if global_grayscale_mode:
+                if config["global_grayscale_mode"]:
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
                 #wyostrzenie obrazu
                 #img = cv2.GaussianBlur(img, (5, 5), 0)
 
                 # Detekcja kodów QR za pomocą pyzbar
-                rois = detect_qr(img, margin=global_margin)
+                rois = detect_qr(img, margin=config["global_margin"])
                 ROIs_temp.append(rois)
 
             else:
@@ -102,9 +113,9 @@ def optical_procesing():
                         ROIs_temp.remove(x)
 
                 ROIs = ROIs_temp.pop()
+                write_config("configs\\rois.json",ROIs)
                 set_start_time = 1
-                global_detection_mode = 0
-
+                config["global_detection_mode"] = 0
 
 
 def debuging():
@@ -121,7 +132,7 @@ def debuging():
             elif platform.system() == "Windows":
                 os.system("cls")
 
-#test commita
+
 def generate_frame_www():
     while True:
         with frame_lock:
@@ -131,7 +142,7 @@ def generate_frame_www():
                 frame = global_frame.copy()
 
         # skala szarości
-        if global_grayscale_mode:
+        if config["global_grayscale_mode"]:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         for idx, (x, y, w, h) in enumerate(ROIs):
@@ -157,18 +168,18 @@ def comm():
             
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    global global_detection_mode, global_grayscale_mode, global_debug_mode, global_margin
+    global global_detection_mode, global_grayscale_mode, global_debug_mode, global_margin, config
 
     if request.method == 'POST':
         form = request.form.get('form')
 
         #Odczyt wartści dla trybu detekcji
         if form == "tryby":
-            global_detection_mode = int(request.form.get('tryby', default=0))
+            config["global_detection_mode"] = int(request.form.get('tryby', default=0))
 
         #Odczyt wartości dla skali szarości
         elif form == "grayscale":
-            global_grayscale_mode = int(request.form.get('grayscale', default=0))
+            config["global_grayscale_mode"] = int(request.form.get('grayscale', default=0))
 
         #Odczyt wartości dla trybu debug
         elif form == "debug":
@@ -195,8 +206,23 @@ threads = [
 ]
 
 if __name__ == "__main__":
-   for t in threads:
+    #Wczytanie konfiguracji
+    if os.path.exists("configs\\config.json"):
+        config = read_config("configs\\config.json")
+        print(config)
+    else:
+        write_config("configs\\config.json", config)
+
+    #Wczytanie zapisanych punktów ROI
+    if os.path.exists("configs\\rois.json"):
+        ROIs = read_config("configs\\rois.json")
+    else:
+        ROIs = write_config("configs\\rois.json", ROIs)
+
+
+    #Rozpoczęcie wątków
+    for t in threads:
        t.start()
 
-   for t in threads:
+    for t in threads:
        t.join()
