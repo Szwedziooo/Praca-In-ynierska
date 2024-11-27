@@ -87,6 +87,7 @@ def optical_procesing():
 
             with inspection['lock']:
                 if inspection['on']:
+                    print("Wlaczono inspekcje")
                     if inspection['counter'] == 0:
                         scanned_qr_zones_bools_final = [False] * 20
 
