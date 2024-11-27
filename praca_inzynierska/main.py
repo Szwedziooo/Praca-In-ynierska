@@ -90,14 +90,16 @@ def optical_procesing():
                     if inspection['counter'] == 0:
                         scanned_qr_zones_bools_final = [False] * 20
 
-                    if inspection['counter'] < 10:
+                    if inspection['counter'] < 5:
                         for idx, q in enumerate(scanned_qr_zones_bools):
                             if q:
                                 scanned_qr_zones_bools_final[idx] = True
+                        inspection['counter'] += 1
                     else:
                         inspection['on'] = False
                         inspection['counter'] = 0
                         inspection['done'] = True
+
 
             with frame_lock:
                 global_frame = frame.copy()
@@ -183,7 +185,7 @@ def comm():
             if not inspection['on'] and inspection['done']:
                 modbus_TCP_send_holding_registers("192.168.10.10",502,0,scanned_qr_zones_bools_final+[0,1])
             elif not inspection['on']:
-                inspection['on'], _ = modbus_TCP_read_holding_registers("192.168.10.10",502,21,1)
+                _, inspection['on'] = modbus_TCP_read_holding_registers("192.168.10.10",502,21,1)
         time.sleep(1)
 
 
