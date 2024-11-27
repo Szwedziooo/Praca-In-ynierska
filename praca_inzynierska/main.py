@@ -187,7 +187,7 @@ def comm():
                 inspection['done'] = False
             elif not inspection['on']:
                 _, inspection['on'] = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
-                print()
+                print(inspection['on'])
         time.sleep(1)
 
 
