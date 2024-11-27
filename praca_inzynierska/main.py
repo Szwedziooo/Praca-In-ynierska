@@ -5,13 +5,16 @@ import numpy as np
 import threading as th
 import datetime
 import os
+import communication
+
 
 from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
 from detect_rq import detect_qr
+from praca_inzynierska.communication import modbus_TCP_read_holding_registers, modbus_TCP_send_holding_registers
 from write_config import write_config
 from read_conifg import read_config
-from communication import communication_MODBUS_TCP, inspection_ON
+
 
 app = Flask(__name__)
 
@@ -28,8 +31,6 @@ elif platform.system() == "Windows":
 cap.set(cv2.CAP_PROP_FPS, 20)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1920)
-
-
 
 ROIs = [(10, 10, 155, 155)]
 ROIs_temp = []
@@ -50,9 +51,18 @@ config = {
 set_start_time = 1
 start_time = datetime.datetime.now()
 
+inspection = {
+    "counter": 0,
+    'on': False,
+    'done': False,
+    'lock': th.Lock()
+}
+
+
+
 
 def optical_procesing():
-    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection_ON, start_time_2, set_start_time_2
+    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection
     scanned_qr_zones_bools = [False] * 20
     scanned_qr_zones_str = [""] * 20
 
@@ -74,6 +84,20 @@ def optical_procesing():
                         scanned_qr_zones_str[idx] = detected[0].data
                         frame = cv2.polylines(frame, [np.array(detected[0].polygon, dtype=np.int32) + np.array((x,y))], True,(0, 255, 0), 5)
                         frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 255, 0),2)
+
+            with inspection['lock']:
+                if inspection['on']:
+                    if inspection['counter'] == 0:
+                        scanned_qr_zones_bools_final = [False] * 20
+
+                    if inspection['counter'] < 10:
+                        for idx, q in scanned_qr_zones_bools:
+                            if q:
+                                scanned_qr_zones_bools_final[idx] = True
+                    else:
+                        inspection['on'] = False
+                        inspection['counter'] = 0
+                        inspection['done'] = True
 
             with frame_lock:
                 global_frame = frame.copy()
@@ -152,9 +176,14 @@ def generate_frame_www():
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 def comm():
-    global scanned_qr_zones_bools_final
+    global scanned_qr_zones_bools_final, inspection
     while True:
-        communication_MODBUS_TCP(scanned_qr_zones_bools_final,"192.168.10.10","502")
+        # communication_MODBUS_TCP(scanned_qr_zones_bools_final,"192.168.10.10","502")
+        with inspection['lock']:
+            if not inspection['on'] and inspection['done']:
+                modbus_TCP_send_holding_registers("192.168.10.10",502,0,scanned_qr_zones_bools_final+[0,1])
+            elif not inspection['on']:
+                inspection['on'], _ = modbus_TCP_read_holding_registers("192.168.10.10",502,21,1)
         time.sleep(1)
 
 

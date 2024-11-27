@@ -21,7 +21,7 @@ def communication_Snap7(IP, DB_number, DB_start_byte, bool_values_to_send):
                 byte_offset = index // 8  # Byte index
                 bit_offset = index % 8    # Bit index within the byte
                 set_bool(buffer, byte_offset, bit_offset, flag)
-            plc_client.db_write(db_index, start_position, buffer)
+            plc_client.db_write(DB_number, DB_start_byte, buffer)
             print(f"Boolean sent to PLC in DB {DB_number} starting from byte {DB_start_byte}")
         else:
             print("Connection to PLC S7-1200 failed")
@@ -85,29 +85,29 @@ def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count)
 TESTOWANIE FUNKCJINALNOŚCI
 '''
 
-if __name__ == '__main__':
-
-    # Coonnection configuration
-    plc_ip_address = '192.168.10.10'
-
-    # MODBUS TCP CONFIGURATION
-    port = 502  # Default port Modbus TCP/IP
-
-    # WAREHOUSE STATE
-    warehouse_cells = [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0]
-
-    # SNAP7 CONFIGURATION
-    db_index = 16  # Data block number
-    start_position = 0  # Starting byte in the data block
-
-    # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
-    # communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
-
-
-    res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19, values=[1,1,1,1])
-    # print(res)
-
-    read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19 , count=1)
-
-
-# # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# if __name__ == '__main__':
+#
+#     # Coonnection configuration
+#     plc_ip_address = '192.168.10.10'
+#
+#     # MODBUS TCP CONFIGURATION
+#     port = 502  # Default port Modbus TCP/IP
+#
+#     # WAREHOUSE STATE
+#     warehouse_cells = [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0]
+#
+#     # SNAP7 CONFIGURATION
+#     db_index = 16  # Data block number
+#     start_position = 0  # Starting byte in the data block
+#
+#     # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
+#     # communication_Snap7(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
+#
+#
+#     res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19, values=[1,1,1,1])
+#     # print(res)
+#
+#     read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19 , count=1)
+#
+#
+# # # See PyCharm help at https://www.jetbrains.com/help/pycharm/
