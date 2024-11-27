@@ -5,13 +5,13 @@ import numpy as np
 import threading as th
 import datetime
 import os
-import communication
+
 
 
 from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
 from detect_rq import detect_qr
-from praca_inzynierska.communication import modbus_TCP_read_holding_registers, modbus_TCP_send_holding_registers
+from communication import modbus_TCP_read_holding_registers, modbus_TCP_send_holding_registers
 from write_config import write_config
 from read_conifg import read_config
 
