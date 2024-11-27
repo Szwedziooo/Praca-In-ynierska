@@ -184,11 +184,14 @@ def comm():
         # communication_MODBUS_TCP(scanned_qr_zones_bools_final,"192.168.10.10","502")
         with inspection['lock']:
             if not inspection['on'] and inspection['done']:
-                modbus_TCP_send_holding_registers("192.168.10.10",502,0,scanned_qr_zones_bools_final+[0,1,1])
+                modbus_TCP_send_holding_registers("192.168.10.10",502,0,scanned_qr_zones_bools_final+[0,1])
                 inspection['done'] = False
             elif not inspection['on']:
-                _, inspection['on'] = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
-                print(inspection['on'])
+                _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
+                if tmp == [1]:
+                    inspection['on'] = True
+                    print(inspection['on'])
+
         time.sleep(1)
 
 
