@@ -184,8 +184,10 @@ def comm():
         with inspection['lock']:
             if not inspection['on'] and inspection['done']:
                 modbus_TCP_send_holding_registers("192.168.10.10",502,0,scanned_qr_zones_bools_final+[0,1])
+                inspection['done'] = False
             elif not inspection['on']:
                 _, inspection['on'] = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
+                print()
         time.sleep(1)
 
 
