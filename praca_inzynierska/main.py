@@ -91,7 +91,7 @@ def optical_procesing():
                         scanned_qr_zones_bools_final = [False] * 20
 
                     if inspection['counter'] < 10:
-                        for idx, q in scanned_qr_zones_bools:
+                        for idx, q in enumerate(scanned_qr_zones_bools):
                             if q:
                                 scanned_qr_zones_bools_final[idx] = True
                     else:
