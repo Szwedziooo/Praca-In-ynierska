@@ -77,7 +77,7 @@ Komunukacja poprzez Modbus TCP:
 
 def modbus_TCP_send_holding_registers(plc_ip, default_port, HR_start_idx, values):
 
-    data_sent = False
+    data_sent_status = False
     client = ModbusTcpClient(host=plc_ip, port=default_port)
 
     try:
@@ -98,11 +98,11 @@ def modbus_TCP_send_holding_registers(plc_ip, default_port, HR_start_idx, values
     finally:
         client.close()
 
-    return data_sent
+    return data_sent_status
 
 def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count):
 
-    data_read = False
+    data_read_status = False
     client = ModbusTcpClient(host=plc_ip, port=default_port)
     registers = None
 
@@ -124,7 +124,7 @@ def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count)
     finally:
         client.close()
 
-    return data_read, registers
+    return data_read_status, registers
 
 
 '''
