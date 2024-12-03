@@ -11,6 +11,7 @@ Komunikacja poprzez Snap7:
 -> odczytywanie tablicy bool' z DB
 '''
 
+
 def snap7_send_booleans(IP, DB_number, DB_start_byte, bool_values_to_send):
     data_sent_status = False
     plc_client = snap7.client.Client()
