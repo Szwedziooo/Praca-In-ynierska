@@ -167,6 +167,8 @@ def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count)
     return data_read_status, registers
 
 
+
+
 '''
 TESTOWANIE FUNKCJINALNOŚCI KOMUNIKACJI
 '''
