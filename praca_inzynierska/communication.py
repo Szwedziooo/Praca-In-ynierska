@@ -70,6 +70,39 @@ def snap7_read_booleans(IP, DB_number, DB_start_byte, num_of_bools):
 
     return data_read_status, bool_values
 
+def snap7_send_strings(IP, DB_number, string_offsets, string_vector):
+    STRING_LENGTH = 12
+    TOTAL_STRING_SIZE = 14  # 2 bajty nagłówka + 12 znaków danych
+    plc_client = snap7.client.Client()
+    string_send_status = False
+
+    try:
+        # Połączenie z PLC
+        plc_client.connect(IP, rack=0, slot=1)
+
+        # Iteracja po stringach do wysłania
+        for i, (offset, string_value) in enumerate(zip(string_offsets, string_vector)):
+            # Tworzenie bufora dla STRING
+            buffer = bytearray(TOTAL_STRING_SIZE)
+            buffer[0] = STRING_LENGTH  # Maksymalna długość STRING
+            buffer[1] = len(string_value)  # Aktualna długość STRING
+            set_string(buffer, 2, string_value, STRING_LENGTH)  # Ustawienie danych STRING
+
+            # Zapis danych do DB
+            plc_client.db_write(DB_number, offset, buffer)
+
+        string_send_status = True
+        print("Stringi zostały pomyślnie wysłane do PLC.")
+
+    except Exception as e:
+        string_send_status = False
+        print(f"Błąd podczas wysyłania danych do PLC: {e}")
+    finally:
+        # Rozłączenie z PLC
+        plc_client.disconnect()
+
+    return string_send_status
+
 '''
 Komunukacja poprzez Modbus TCP:
 -> wysyłanie tablicy int do Holding Registers
@@ -132,29 +165,35 @@ def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count)
 TESTOWANIE FUNKCJINALNOŚCI KOMUNIKACJI
 '''
 
-# if __name__ == '__main__':
-#
-#     # Coonnection configuration
-#     plc_ip_address = '192.168.10.10'
-#
-#     # MODBUS TCP CONFIGURATION
-#     port = 502  # Default port Modbus TCP/IP
-#
-#     # WAREHOUSE STATE
-#     warehouse_cells = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-#     warehouse_cells1 = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
-#
-#     # SNAP7 CONFIGURATION
-#     db_index = 20  # Data block number
-#     start_position = 2  # Starting byte in the data block
-#
-#     # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
-#     snap7_send_booleans(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
-#     res = snap7_read_booleans(IP=plc_ip_address, DB_number=20, DB_start_byte=0 , num_of_bools=1)
-#
-#     #res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19, values=[1,1,1,1])
-#     # print(res)
-#
-#     #read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=21 , count=1)
+if __name__ == '__main__':
+
+    # Coonnection configuration
+    plc_ip_address = '192.168.10.10'
+
+    # MODBUS TCP CONFIGURATION
+    port = 502  # Default port Modbus TCP/IP
+
+    # WAREHOUSE STATE
+    warehouse_cells = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    warehouse_cells1 = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+
+    # SNAP7 CONFIGURATION
+    db_index = 20  # Data block number
+    start_position = 2  # Starting byte in the data block
+
+    # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
+    snap7_send_booleans(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
+    res = snap7_read_booleans(IP=plc_ip_address, DB_number=20, DB_start_byte=0 , num_of_bools=1)
+
+    string_vector = ["Hello", "World", "Siemens", "PLC", "TIA",
+                     "Portal", "Snap7", "Python", "Programming",
+                     "Automation", "Offsets", "Strings"]
+    string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
+
+    snap7_send_strings(IP=plc_ip_address, DB_number=db_index, string_offsets=string_offsets ,string_vector=string_vector)
+    #res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19, values=[1,1,1,1])
+    # print(res)
+
+    #read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=21 , count=1)
 
 
