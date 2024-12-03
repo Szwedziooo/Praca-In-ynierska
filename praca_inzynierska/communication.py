@@ -70,6 +70,7 @@ def snap7_read_booleans(IP, DB_number, DB_start_byte, num_of_bools):
 
     return data_read_status, bool_values
 
+
 def snap7_send_strings(IP, DB_number, string_offsets, string_vector):
     STRING_LENGTH = 12
     TOTAL_STRING_SIZE = 14  # 2 bajty nagłówka + 12 znaków danych
@@ -80,14 +81,19 @@ def snap7_send_strings(IP, DB_number, string_offsets, string_vector):
         # Połączenie z PLC
         plc_client.connect(IP, rack=0, slot=1)
 
-        # Iteracja po stringach do wysłania
-        for i, (offset, string_value) in enumerate(zip(string_offsets, string_vector)):
+        for offset, string_value in zip(string_offsets, string_vector):
             # Tworzenie bufora dla STRING
-            buffer = bytearray(TOTAL_STRING_SIZE)
+            buffer = bytearray(TOTAL_STRING_SIZE)  # Cały bufor musi mieć rozmiar 14 bajtów
             buffer[0] = STRING_LENGTH  # Maksymalna długość STRING
-            buffer[1] = len(string_value)  # Aktualna długość STRING
-            set_string(buffer, 2, string_value, STRING_LENGTH)  # Ustawienie danych STRING
+            buffer[1] = min(len(string_value), STRING_LENGTH)  # Aktualna długość STRING (max 12 znaków)
 
+            # Wypełnij dane STRING (przytnij, jeśli jest za długi)
+            for i in range(len(string_value[:STRING_LENGTH])):
+                buffer[2 + i] = ord(string_value[i])  # ASCII znaków do bufora
+
+            # Wypełnij pozostałe znaki zerami (dla wyrównania)
+            for i in range(len(string_value), STRING_LENGTH):
+                buffer[2 + i] = 0  # Puste bajty
             # Zapis danych do DB
             plc_client.db_write(DB_number, offset, buffer)
 
@@ -187,7 +193,7 @@ if __name__ == '__main__':
 
     string_vector = ["Hello", "World", "Siemens", "PLC", "TIA",
                      "Portal", "Snap7", "Python", "Programming",
-                     "Automation", "Offsets", "Strings"]
+                     "asd", "Offsets", "as"]
     string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
 
     snap7_send_strings(IP=plc_ip_address, DB_number=db_index, string_offsets=string_offsets ,string_vector=string_vector)
