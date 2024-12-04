@@ -167,6 +167,68 @@ def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count)
     return data_read_status, registers
 
 
+def send_strings_to_modbus(plc_ip, modbus_port, start_address, string_vector):
+    """
+    Wysyła listę stringów do sterownika PLC za pomocą MODBUS TCP.
+
+    Args:
+        plc_ip (str): Adres IP sterownika PLC.
+        modbus_port (int): Port Modbus TCP (zwykle 502).
+        start_address (int): Adres początkowy w rejestrach Modbus.
+        string_vector (list of str): Lista stringów do wysłania.
+
+    Returns:
+        None
+    """
+    try:
+        # Połączenie z PLC przez Modbus TCP
+        client = ModbusTcpClient(plc_ip, port=modbus_port)
+        if not client.connect():
+            raise ConnectionError("Nie udało się połączyć z PLC przez Modbus TCP.")
+
+        for index, string_value in enumerate(string_vector):
+            # Adres startowy dla bieżącego stringa
+            address = start_address + index * 5  # Załóżmy maksymalnie 10 rejestrów na string
+
+            # Zakodowanie stringa na rejestry Modbus
+            registers = string_to_modbus_registers(string_value, max_length=20)
+
+            # Wysłanie rejestrów do PLC
+            result = client.write_registers(address, registers)
+            if result.isError():
+                raise Exception(f"Błąd przy zapisie stringa '{string_value}' na adres {address}.")
+
+        print("Stringi zostały pomyślnie wysłane do PLC.")
+
+    except Exception as e:
+        print(f"Błąd podczas wysyłania stringów do PLC: {e}")
+    finally:
+        client.close()
+
+
+def string_to_modbus_registers(input_string, max_length):
+    """
+    Koduje string do formatu Modbus (każdy rejestr to 2 znaki ASCII).
+
+    Args:
+        input_string (str): String do zakodowania.
+        max_length (int): Maksymalna długość stringa w znakach.
+
+    Returns:
+        list of int: Lista rejestrów Modbus z zakodowanymi danymi.
+    """
+    # Przycięcie stringa do maksymalnej długości
+    input_string = input_string[:max_length]
+
+    # Zakodowanie znaków ASCII do rejestrów (2 znaki = 1 rejestr)
+    registers = []
+    for i in range(0, len(input_string), 2):
+        high_byte = ord(input_string[i])  # Pierwszy znak
+        low_byte = ord(input_string[i + 1]) if i + 1 < len(input_string) else 0  # Drugi znak (lub 0 jeśli brak)
+        registers.append((high_byte << 8) + low_byte)
+
+    return registers
+
 
 
 '''
@@ -189,19 +251,22 @@ if __name__ == '__main__':
     db_index = 20  # Data block number
     start_position = 2  # Starting byte in the data block
 
-    # communication_MODBUS_TCP(values_to_send=warehouse_cells, plc_ip=plc_ip_address, default_port=port)
-    snap7_send_booleans(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
-    res = snap7_read_booleans(IP=plc_ip_address, DB_number=20, DB_start_byte=0 , num_of_bools=1)
+    # snap7_send_booleans(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
+    # res = snap7_read_booleans(IP=plc_ip_address, DB_number=20, DB_start_byte=0 , num_of_bools=1)
+    #
+    # string_vector = ["Hello", "World", "Siemens", "PLC", "TIA",
+    #                  "Portal", "Snap7", "Python", "Programming",
+    #                  "asd", "Offsets", "as"]
+    # string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
+    #
+    # snap7_send_strings(IP=plc_ip_address, DB_number=db_index, string_offsets=string_offsets ,string_vector=string_vector)
 
-    string_vector = ["Hello", "World", "Siemens", "PLC", "TIA",
-                     "Portal", "Snap7", "Python", "Programming",
-                     "asd", "Offsets", "as"]
-    string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
+    res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=0, values=[0,1,1,1])
+    read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=21 , count=1)
 
-    snap7_send_strings(IP=plc_ip_address, DB_number=db_index, string_offsets=string_offsets ,string_vector=string_vector)
-    #res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=19, values=[1,1,1,1])
-    # print(res)
+    start_address = 30  # Adres początkowy rejestrów
+    string_vector = ["Box1", "Box2", "Box3", "Box4", "Box5"]
 
-    #read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=21 , count=1)
+    send_strings_to_modbus(plc_ip_address, port, start_address, string_vector)
 
 
