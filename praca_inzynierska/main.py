@@ -187,10 +187,10 @@ def generate_frame_www():
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 def comm():
-    global scanned_qr_zones_bools_final, inspection, comm_mode
+    global scanned_qr_zones_bools_final, inspection, config
     while True:
         with inspection['lock']:
-            if comm_mode == 0:
+            if config['comm_mode'] == 0:
                 if not inspection['on'] and inspection['done']:
                     modbus_TCP_send_holding_registers("192.168.10.10",502,0, scanned_qr_zones_bools_final+[0,1])
                     inspection['done'] = False
@@ -200,7 +200,7 @@ def comm():
                         inspection['on'] = True
                         print(inspection['on'])
 
-            elif comm_mode == 1:
+            elif config['comm_mode'] == 1:
                 if not inspection['on'] and inspection['done']:
                     snap7_send_booleans("192.168.10.10",20,2, scanned_qr_zones_bools_final)
                     snap7_send_booleans("192.168.10.10", 20, 0, [1, 0])
