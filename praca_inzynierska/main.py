@@ -107,6 +107,8 @@ def optical_processing():
                             for idx, q in enumerate(scanned_qr_zones_str):
                                 if q != "":
                                     scanned_qr_zones_str_final[idx] = q
+                                else:
+                                    scanned_qr_zones_str_final[idx] = " "
                             inspection['counter'] += 1
                         else:
                             inspection['on'] = False
