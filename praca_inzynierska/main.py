@@ -6,6 +6,7 @@ import threading as th
 import datetime
 import os
 from ultralytics import YOLO
+import torch
 
 from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
@@ -193,7 +194,9 @@ def comm():
 
         time.sleep(1)
 
-
+def init_model(model):
+    model(torch.zeros((1, 3, 640, 640)))
+    print("Koniec inicjalizacji modelu wykrywania QR")
             
 @app.route('/', methods=['POST', 'GET'])
 def index():
@@ -231,7 +234,8 @@ threads = [
     th.Thread(target=optical_processing, daemon=True),
     th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True),
     th.Thread(target=debuging, daemon=True),
-    th.Thread(target=comm, daemon=True)
+    th.Thread(target=comm, daemon=True),
+    th.Thread(target=init_model, kwargs={'model': model}, daemon=True)
 ]
 
 if __name__ == "__main__":
