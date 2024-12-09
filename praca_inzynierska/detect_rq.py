@@ -26,6 +26,6 @@ def detect_qr(img, model, margin=10):
                 rois.append((x1, y1, x2 - x1, y2 - y1))
 
     # Sortowanie wyników (opcjonalnie)
-    rois.sort(key=lambda x: (-x[1], x[0]))
+    rois.sort(key=lambda x: (-x[1], -x[0]))
 
     return rois
