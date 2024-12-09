@@ -18,7 +18,7 @@ from read_conifg import read_config
 
 
 app = Flask(__name__)
-
+app.secret_key = "Inzynierka"
 
 cap = cv2.VideoCapture
 if platform.system() == "Linux":
@@ -208,9 +208,9 @@ def init_model(model):
     model_init_flag = True
 
             
-@app.route('/', methods=['POST', 'GET'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    global config
+    global config, model_init_flag
 
     if request.method == 'POST':
         form = request.form.get('form')
@@ -218,6 +218,8 @@ def index():
         #Odczyt wartści dla trybu detekcji
         if form == "tryby":
             config["global_detection_mode"] = int(request.form.get('tryby', default=0))
+            if not model_init_flag and config["global_detection_mode"] == 1:
+                flask.flash("Model nie został jeszcze zainicjalizowany.")
 
         #Odczyt wartości dla skali szarości
         elif form == "grayscale":
@@ -231,6 +233,7 @@ def index():
         elif form == "margin":
             config["global_margin"] = int(request.form.get('margin', default=0))
 
+
     return render_template('index.html')
 
 
@@ -238,13 +241,6 @@ def index():
 def video_feed():
     # Endpoint do przesyłania strumienia wideo
     return Response(generate_frame_www(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/popup')
-def popup_alert():
-    flask.flash("Model nie zostal jeszcze zainicjalizowany")
-
-    return flask.redirect(flask.url_for('index'))
 
 threads = [
     th.Thread(target=optical_processing, daemon=True),

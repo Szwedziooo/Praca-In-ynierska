@@ -75,14 +75,6 @@
         }
 
     </style>
-    <script>
-        // Funkcja wyświetlająca alert z wiadomością
-        function showAlert(message) {
-            if (message) {
-                alert(message);  // Wyświetla popup alert
-            }
-        }
-    </script>
 </head>
 <body class="dark-mode">
     <div>
@@ -137,5 +129,14 @@
             document.body.classList.toggle('light-mode');
         }
     </script>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <script>
+                        alert("{{message}}");
+                    </script>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 </body>
 </html>
