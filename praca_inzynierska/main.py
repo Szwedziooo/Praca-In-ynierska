@@ -12,7 +12,7 @@ import torch
 from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
 from detect_rq import detect_qr
-from communication import modbus_TCP_read_holding_registers, modbus_TCP_send_holding_registers
+from communication import *
 from write_config import write_config
 from read_conifg import read_config
 
@@ -45,7 +45,8 @@ config = {
     "global_detection_mode": 0,
     "global_grayscale_mode": 0,
     "global_debug_mode": 0,
-    "global_margin": 10
+    "global_margin": 10,
+    "comm_mode": 1
 }
 
 
@@ -186,17 +187,31 @@ def generate_frame_www():
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 def comm():
-    global scanned_qr_zones_bools_final, inspection
+    global scanned_qr_zones_bools_final, inspection, comm_mode
     while True:
         with inspection['lock']:
-            if not inspection['on'] and inspection['done']:
-                modbus_TCP_send_holding_registers("192.168.10.10",502,0,scanned_qr_zones_bools_final+[0,1])
-                inspection['done'] = False
-            elif not inspection['on']:
-                _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
-                if tmp == [1]:
-                    inspection['on'] = True
-                    print(inspection['on'])
+            if comm_mode == 0:
+                if not inspection['on'] and inspection['done']:
+                    modbus_TCP_send_holding_registers("192.168.10.10",502,0, scanned_qr_zones_bools_final+[0,1])
+                    inspection['done'] = False
+                elif not inspection['on']:
+                    _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
+                    if tmp == [1]:
+                        inspection['on'] = True
+                        print(inspection['on'])
+
+            elif comm_mode == 1:
+                if not inspection['on'] and inspection['done']:
+                    snap7_send_booleans("192.168.10.10",20,2, scanned_qr_zones_bools_final)
+                    snap7_send_booleans("192.168.10.10", 20, 0, [1, 0])
+                    inspection['done'] = False
+                elif not inspection['on']:
+                    # _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
+                    _, tmp = snap7_read_booleans("192.168.10.10", 20,0,2)
+                    if tmp[1]:
+                        inspection['on'] = True
+                        print(inspection['on'])
+
 
         time.sleep(1)
 
