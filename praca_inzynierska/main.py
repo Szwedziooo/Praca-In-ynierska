@@ -37,6 +37,7 @@ ROIs = [(10, 10, 155, 155)]
 ROIs_temp = []
 
 scanned_qr_zones_bools_final = [False] * 20
+scanned_qr_zones_str_final = [''] * 20
 
 global_frame = None
 frame_lock = th.Lock()  # Dodajemy blokadę dla global_frame
@@ -65,7 +66,7 @@ model = YOLO("best.pt")
 model_init_flag = False
 
 def optical_processing():
-    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection, model, model_init_flag
+    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, scanned_qr_zones_str_final, inspection, model, model_init_flag
     scanned_qr_zones_bools = [False] * 20
     scanned_qr_zones_str = [""] * 20
 
@@ -94,11 +95,18 @@ def optical_processing():
                         print("Wlaczono inspekcje")
                         if inspection['counter'] == 0:
                             scanned_qr_zones_bools_final = [False] * 20
+                            scanned_qr_zones_str_final = [''] * 20
+                            scanned_qr_zones_bools = [False] * 20
+                            scanned_qr_zones_str = [""] * 20
 
                         if inspection['counter'] < 5:
                             for idx, q in enumerate(scanned_qr_zones_bools):
                                 if q:
                                     scanned_qr_zones_bools_final[idx] = True
+
+                            for idx, q in enumerate(scanned_qr_zones_str):
+                                if q != "":
+                                    scanned_qr_zones_str_final[idx] = q
                             inspection['counter'] += 1
                         else:
                             inspection['on'] = False
@@ -187,7 +195,7 @@ def generate_frame_www():
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 def comm():
-    global scanned_qr_zones_bools_final, inspection, config
+    global scanned_qr_zones_bools_final, scanned_qr_zones_str_final, inspection, config
     while True:
         with inspection['lock']:
             if config['comm_mode'] == 0:
@@ -203,6 +211,8 @@ def comm():
             elif config['comm_mode'] == 1:
                 if not inspection['on'] and inspection['done']:
                     snap7_send_booleans("192.168.10.10",20,2, scanned_qr_zones_bools_final)
+                    string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
+                    snap7_send_strings("192.168.10.10",20, string_offsets, scanned_qr_zones_str_final)
                     snap7_send_booleans("192.168.10.10", 20, 0, [1, 0])
                     inspection['done'] = False
                 elif not inspection['on']:
