@@ -7,3 +7,4 @@ pymodbus~=3.7.4
 ultralytics~=8.3.44
 qrcode~=8.0
 pillow~=11.0.0
+torch~=2.5.1

@@ -1,6 +1,7 @@
 import platform
 import time
 import cv2
+import flask
 import numpy as np
 import threading as th
 import datetime
@@ -55,14 +56,15 @@ inspection = {
     "counter": 0,
     'on': False,
     'done': False,
-    'lock': th.Lock()
+    'lock': th.Lock(),
 }
 
 
 model = YOLO("best.pt")
+model_init_flag = False
 
 def optical_processing():
-    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection
+    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection, model, model_init_flag
     scanned_qr_zones_bools = [False] * 20
     scanned_qr_zones_str = [""] * 20
 
@@ -85,59 +87,64 @@ def optical_processing():
                         frame = cv2.polylines(frame, [np.array(detected[0].polygon, dtype=np.int32) + np.array((x,y))], True,(0, 255, 0), 5)
                         frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 0, 255),2)
 
-            with inspection['lock']:
-                if inspection['on']:
-                    print("Wlaczono inspekcje")
-                    if inspection['counter'] == 0:
-                        scanned_qr_zones_bools_final = [False] * 20
 
-                    if inspection['counter'] < 5:
-                        for idx, q in enumerate(scanned_qr_zones_bools):
-                            if q:
-                                scanned_qr_zones_bools_final[idx] = True
-                        inspection['counter'] += 1
-                    else:
-                        inspection['on'] = False
-                        inspection['counter'] = 0
-                        inspection['done'] = True
+                if inspection['on']:
+                    with inspection['lock']:
+                        print("Wlaczono inspekcje")
+                        if inspection['counter'] == 0:
+                            scanned_qr_zones_bools_final = [False] * 20
+
+                        if inspection['counter'] < 5:
+                            for idx, q in enumerate(scanned_qr_zones_bools):
+                                if q:
+                                    scanned_qr_zones_bools_final[idx] = True
+                            inspection['counter'] += 1
+                        else:
+                            inspection['on'] = False
+                            inspection['counter'] = 0
+                            inspection['done'] = True
 
 
             with frame_lock:
                 global_frame = frame.copy()
 
         elif config["global_detection_mode"] == 1:
-            if set_start_time:
-                start_time = datetime.datetime.now()
-                set_start_time = 0
-                ROIs_temp.clear()
+            if model_init_flag:
+                if set_start_time:
+                    start_time = datetime.datetime.now()
+                    set_start_time = 0
+                    ROIs_temp.clear()
 
-            if (datetime.datetime.now() - start_time).seconds < 2:
-                ret, img = cap.read()
-                img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                if not ret:
-                    print("Nie udało się odczytać obrazu z kamery.")
-                    continue
+                if (datetime.datetime.now() - start_time).seconds < 2:
+                    ret, img = cap.read()
+                    img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                    if not ret:
+                        print("Nie udało się odczytać obrazu z kamery.")
+                        continue
 
-                #skala szarości
-                if config["global_grayscale_mode"]:
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    #skala szarości
+                    if config["global_grayscale_mode"]:
+                        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
-                # Detekcja kodów QR za pomocą pyzbar
-                rois = detect_qr(img, model=model, margin=config["global_margin"])
-                ROIs_temp.append(rois)
+                    # Detekcja kodów QR za pomocą pyzbar
+                    rois = detect_qr(img, model=model, margin=config["global_margin"])
+                    ROIs_temp.append(rois)
 
+                else:
+                    MaxQRDetected = 0
+                    for idx, x in enumerate(ROIs_temp):
+                        if len(x) > MaxQRDetected:
+                            MaxQRDetected = len(x)
+                        else:
+                            ROIs_temp.remove(x)
+
+                    ROIs = ROIs_temp.pop()
+                    write_config("configs/rois.json",ROIs)
+                    set_start_time = 1
+                    config["global_detection_mode"] = 0
             else:
-                MaxQRDetected = 0
-                for idx, x in enumerate(ROIs_temp):
-                    if len(x) > MaxQRDetected:
-                        MaxQRDetected = len(x)
-                    else:
-                        ROIs_temp.remove(x)
-
-                ROIs = ROIs_temp.pop()
-                write_config("configs/rois.json",ROIs)
-                set_start_time = 1
+                print("Model nie zostal jeszcze zainicjalizowany")
                 config["global_detection_mode"] = 0
 
 
@@ -181,7 +188,6 @@ def generate_frame_www():
 def comm():
     global scanned_qr_zones_bools_final, inspection
     while True:
-        # communication_MODBUS_TCP(scanned_qr_zones_bools_final,"192.168.10.10","502")
         with inspection['lock']:
             if not inspection['on'] and inspection['done']:
                 modbus_TCP_send_holding_registers("192.168.10.10",502,0,scanned_qr_zones_bools_final+[0,1])
@@ -195,8 +201,12 @@ def comm():
         time.sleep(1)
 
 def init_model(model):
-    model(torch.zeros((1, 3, 640, 640)))
+    global model_init_flag
+
+    model(torch.zeros((1, 3, 640, 480)))
     print("Koniec inicjalizacji modelu wykrywania QR")
+    model_init_flag = True
+
             
 @app.route('/', methods=['POST', 'GET'])
 def index():
@@ -229,6 +239,12 @@ def video_feed():
     # Endpoint do przesyłania strumienia wideo
     return Response(generate_frame_www(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+
+@app.route('/popup')
+def popup_alert():
+    flask.flash("Model nie zostal jeszcze zainicjalizowany")
+
+    return flask.redirect(flask.url_for('index'))
 
 threads = [
     th.Thread(target=optical_processing, daemon=True),
