@@ -5,8 +5,7 @@ import numpy as np
 import threading as th
 import datetime
 import os
-
-
+from ultralytics import YOLO
 
 from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
@@ -59,9 +58,9 @@ inspection = {
 }
 
 
+model = YOLO("best.pt")
 
-
-def optical_procesing():
+def optical_processing():
     global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, inspection
     scanned_qr_zones_bools = [False] * 20
     scanned_qr_zones_str = [""] * 20
@@ -111,7 +110,7 @@ def optical_procesing():
                 set_start_time = 0
                 ROIs_temp.clear()
 
-            if (datetime.datetime.now() - start_time).seconds < 10:
+            if (datetime.datetime.now() - start_time).seconds < 2:
                 ret, img = cap.read()
                 img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 if not ret:
@@ -124,7 +123,7 @@ def optical_procesing():
 
 
                 # Detekcja kodów QR za pomocą pyzbar
-                rois = detect_qr(img, margin=config["global_margin"])
+                rois = detect_qr(img, model=model, margin=config["global_margin"])
                 ROIs_temp.append(rois)
 
             else:
@@ -159,7 +158,7 @@ def generate_frame_www():
             if frame_lock is None: 
                 frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
             else:
-                frame = global_frame.copy()
+                frame = global_frame
 
         # skala szarości
         if config["global_grayscale_mode"]:
@@ -229,7 +228,7 @@ def video_feed():
 
 
 threads = [
-    th.Thread(target=optical_procesing, daemon=True),
+    th.Thread(target=optical_processing, daemon=True),
     th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True),
     th.Thread(target=debuging, daemon=True),
     th.Thread(target=comm, daemon=True)
