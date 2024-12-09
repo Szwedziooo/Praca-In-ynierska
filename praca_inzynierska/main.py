@@ -82,7 +82,7 @@ def optical_processing():
                         scanned_qr_zones_bools[idx] = True
                         scanned_qr_zones_str[idx] = detected[0].data
                         frame = cv2.polylines(frame, [np.array(detected[0].polygon, dtype=np.int32) + np.array((x,y))], True,(0, 255, 0), 5)
-                        frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 255, 0),2)
+                        frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(255, 0, 0),2)
 
             with inspection['lock']:
                 if inspection['on']:
