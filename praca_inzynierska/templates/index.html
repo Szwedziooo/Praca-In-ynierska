@@ -87,17 +87,28 @@
         </div>
 
         <div id="conf_box1">
-            <p>Wybierz tryb:</p>
+            <p>Wybierz tryb detekcji:</p>
             <form method="POST">
                 <select name="tryby">
                     <option value="0">Wykrywanie</option>
                     <option value="1">Ustawienie ROIs</option>
+                    <option value="2">Podgląg/Konfiguracja</option>
                 </select>
                 <button type="submit" name="form" value="tryby">Zatwierdź</button>
             </form>
         </div>
-
         <div id="conf_box2">
+            <p>Wybierz tryb komuniacji:</p>
+            <form method="POST">
+                <select name="comm">
+                    <option value="0">Modbus TCP/IP</option>
+                    <option value="1">Snap7</option>
+                </select>
+                <button type="submit" name="form" value="tryby">Zatwierdź</button>
+            </form>
+        </div>
+        <br></br>
+        <div id="conf_box3">
         <form method="POST">
             <label> Skala szarości </label>
             <input type="checkbox" value="1" name="grayscale">
@@ -105,14 +116,14 @@
         </form>
         </div>
 
-        <div id="conf_box3">
+        <div id="conf_box4">
         <form method="POST">
             <label> Debugowanie </label>
             <input type="checkbox" value="1" name="debug">
             <button type="submit" name="form" value="debug">Zatwierdź</button>
         </form>
         </div>
-        <div id="conf_box4">
+        <div id="conf_box5">
         <form method="POST">
             <label> Margines </label>
             <input type="range" name="margin" min="0" max="50">

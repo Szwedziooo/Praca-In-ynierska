@@ -259,6 +259,9 @@ def index():
         elif form == "margin":
             config["global_margin"] = int(request.form.get('margin', default=0))
 
+        elif form == "comm":
+            config["comm_mode"] = int(request.form.get('comm', default=0))
+
 
     return render_template('index.html')
 
