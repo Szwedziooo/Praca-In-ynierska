@@ -61,7 +61,7 @@ inspection = {
 }
 
 
-model = YOLO("best.pt")
+model = YOLO("best_ncnn_model")
 model_init_flag = False
 
 def optical_processing():
@@ -155,17 +155,48 @@ def optical_processing():
                 print("Model nie zostal jeszcze zainicjalizowany")
                 config["global_detection_mode"] = 0
 
+        elif config["global_detection_mode"] == 2:
+            if model_init_flag:
+                resized_frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_LINEAR)
+                res = model.track(frame, stream=True)
 
-def debuging():
-    global ROIs
-    while True:
-        if config["global_debug_mode"]:
-            time.sleep(1)
-            print(ROIs)
-            if platform.system() == "Linux":
-                os.system("clear")
-            elif platform.system() == "Windows":
-                os.system("cls")
+
+                frame = model_preview(res, frame)
+
+                with frame_lock:
+                    global_frame = frame.copy()
+            else:
+                print("Model nie zostal jeszcze zainicjalizowany")
+
+def model_preview(results, frame):
+    for result in results:
+        # get the classes names
+        classes_names = result.names
+
+        # iterate over each box
+        for box in result.boxes:
+            # check if confidence is greater than 40 percent
+            if box.conf[0] > 0.4:
+                # get coordinates
+                [x1, y1, x2, y2] = box.xyxy[0]
+                # convert to int
+                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+
+                # get the class
+                cls = int(box.cls[0])
+
+                # get the class name
+                class_name = classes_names[cls]
+
+                # draw the rectangle
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (255,0,0), 2)
+
+                # put the class name and confidence on the image
+                cv2.putText(frame, f'{classes_names[int(box.cls[0])]} {box.conf[0]:.2f}', (x1, y1),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
+
+    return frame
+
 
 
 def generate_frame_www():
@@ -180,9 +211,12 @@ def generate_frame_www():
         if config["global_grayscale_mode"]:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        for idx, (x, y, w, h) in enumerate(ROIs):
-            cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
-            cv2.putText(frame,f"strefa: {idx}",(x,y),1,2,(0,255,0),2,1,False)
+        if config["global_detection_mode"] == 0:
+            for idx, (x, y, w, h) in enumerate(ROIs):
+                cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
+                cv2.putText(frame,f"strefa: {idx}",(x,y),1,2,(0,255,0),2,1,False)
+        elif config["global_detection_mode"] == 2:
+            pass
 
         ret, buffer = cv2.imencode('.jpg', frame)
 
@@ -254,10 +288,6 @@ def index():
         elif form == "grayscale":
             config["global_grayscale_mode"] = int(request.form.get('grayscale', default=0))
 
-        #Odczyt wartości dla trybu debug
-        elif form == "debug":
-            config["global_debug_mode"] = int(request.form.get('debug', default=0))
-
         #Odczyt wartości marginesu dla kodów QR
         elif form == "margin":
             config["global_margin"] = int(request.form.get('margin', default=0))
@@ -277,7 +307,6 @@ def video_feed():
 threads = [
     th.Thread(target=optical_processing, daemon=True),
     th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True),
-    th.Thread(target=debuging, daemon=True),
     th.Thread(target=comm, daemon=True),
     th.Thread(target=init_model, kwargs={'model': model}, daemon=True)
 ]
