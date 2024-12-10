@@ -16,8 +16,7 @@ def snap7_send_booleans(IP, DB_number, DB_start_byte, bool_values_to_send):
     data_sent_status = False
     plc_client = snap7.client.Client()
     try:
-        plc_client.connect(IP, rack=0, slot=1)  # Default hardware configuration for PLC S7-1200
-
+        plc_client.connect(IP, rack=0, slot=1)
         if plc_client.get_connected():
             print(f"Connected to PLC at {IP}")
             bytes_required = (len(bool_values_to_send) + 7) // 8  # One byte = 8 bits
@@ -29,7 +28,7 @@ def snap7_send_booleans(IP, DB_number, DB_start_byte, bool_values_to_send):
                 set_bool(buffer, byte_offset, bit_offset, flag)
             plc_client.db_write(DB_number, DB_start_byte, buffer)
             data_sent_status = True
-            print(f"Boolean sent to PLC in DB {DB_number} starting from byte {DB_start_byte}")
+            print(f"Booleans have been sent to PLC to DB {DB_number} from byte {DB_start_byte}")
 
         else:
             print("Connection to PLC S7-1200 failed")
@@ -63,6 +62,7 @@ def snap7_read_booleans(IP, DB_number, DB_start_byte, num_of_bools):
             data_read_status = True
             print(f"Read {bool_values} from DB {DB_number}, byte {DB_start_byte}")
         else:
+            data_read_status = False
             print("Connection to PLC S7-1200 failed")
     except Exception as e:
         print(f"Błąd podczas odczytu danych z PLC: {e}")
@@ -210,17 +210,15 @@ def send_strings_to_modbus(plc_ip, modbus_port, start_address, string_vector):
 def string_to_modbus_registers(input_string, max_length):
     """
     Koduje string do formatu Modbus (każdy rejestr to 2 znaki ASCII).
-
     Args:
         input_string (str): String do zakodowania.
         max_length (int): Maksymalna długość stringa w znakach.
-
     Returns:
         list of int: Lista rejestrów Modbus z zakodowanymi danymi.
     """
+
     # Przycięcie stringa do maksymalnej długości
     input_string = input_string[:max_length]
-
     # Zakodowanie znaków ASCII do rejestrów (2 znaki = 1 rejestr)
     registers = []
     for i in range(0, len(input_string), 2):
@@ -230,11 +228,13 @@ def string_to_modbus_registers(input_string, max_length):
 
     return registers
 
+    # SNAP7 CONFIGURATION
+    db_index = 20  # Data block number
+    start_position = 2  # Starting byte in the data block
 
-
-# '''
-# TESTOWANIE FUNKCJINALNOŚCI KOMUNIKACJI
-# '''
+'''
+TESTOWANIE FUNKCJINALNOŚCI KOMUNIKACJI
+'''
 #
 # if __name__ == '__main__':
 #
@@ -247,27 +247,31 @@ def string_to_modbus_registers(input_string, max_length):
 #     # WAREHOUSE STATE
 #     warehouse_cells = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 #     warehouse_cells1 = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+#     db_index = 20
 #
-#     # SNAP7 CONFIGURATION
-#     db_index = 20  # Data block number
-#     start_position = 2  # Starting byte in the data block
 #
-#     # snap7_send_booleans(IP=plc_ip_address, DB_number=db_index, DB_start_byte=start_position, bool_values_to_send=warehouse_cells)
-#     # res = snap7_read_booleans(IP=plc_ip_address, DB_number=20, DB_start_byte=0 , num_of_bools=1)
-#     #
-#     # string_vector = ["Hello", "World", "Siemens", "PLC", "TIA",
-#     #                  "Portal", "Snap7", "Python", "Programming",
-#     #                  "asd", "Offsets", "as"]
-#     # string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
-#     #
-#     # snap7_send_strings(IP=plc_ip_address, DB_number=db_index, string_offsets=string_offsets ,string_vector=string_vector)
-#
-#     res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=0, values=[0,1,1,1])
-#     read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=21 , count=1)
-#
-#     start_address = 30  # Adres początkowy rejestrów
-#     string_vector = ["Box1", "Box2", "Box3", "Box4", "Box5"]
-#
-#     send_strings_to_modbus(plc_ip_address, port, start_address, string_vector)
+#     box_indexes = [1, 2, 5, 8, 0, 4, 6, 0, 0,7,0 ,11]
+
+    #wysyłanie statusu komórek
+    #snap7_send_booleans(IP=plc_ip_address, DB_number=20, DB_start_byte=2, bool_values_to_send=warehouse_cells1)
+
+
+    # res = snap7_read_booleans(IP=plc_ip_address, DB_number=20, DB_start_byte=0 , num_of_bools=1)
+
+    # string_vector = ["afdas", "World", "Siemens", "PLC", "TIA",
+    #                   "Portal", "fdas", "jhjh", "Programming",
+    #                   "asd", "Offsets", "as"]
+    # string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
+    # snap7_send_strings(IP=plc_ip_address, DB_number=db_index, string_offsets=string_offsets ,string_vector=string_vector)
+    #
+
+    #res = modbus_TCP_send_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=101, values=box_indexes)
+
+    # # read_res, read_reg = modbus_TCP_read_holding_registers(plc_ip=plc_ip_address, default_port=port, HR_start_idx=21 , count=1)
+    #
+    # start_address = 30  # Adres początkowy rejestrów
+    # string_vector = ["Box1", "Box2", "Box3", "Box4", "Box5", "Box6", "Box7", "Box8", "Box9", "Box10", "Box11", "Box12"]
+    # send_strings_to_modbus(plc_ip_address, port, start_address, string_vector)
+
 
 
