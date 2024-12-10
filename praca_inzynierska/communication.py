@@ -152,11 +152,11 @@ def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count)
             print("PLC connected via MODBUS")
             read_result = client.read_holding_registers(HR_start_idx, count)
             if read_result.isError():
-                data_read = False
+                data_read_status = False
                 print("ERROR reading holding registers")
             else:
                 registers = read_result.registers
-                data_read = True
+                data_read_status = True
                 print(f"Holding registers from {HR_start_idx}: {registers}")
         else:
             print("Connection via MODBUS failed")
