@@ -50,7 +50,6 @@ config = {
     "comm_mode": 1
 }
 
-
 set_start_time = 1
 start_time = datetime.datetime.now()
 
@@ -198,17 +197,18 @@ def comm():
     global scanned_qr_zones_bools_final, scanned_qr_zones_str_final, inspection, config
     while True:
         with inspection['lock']:
-            if config['comm_mode'] == 0:
+            if config["comm_mode"] == 0:
                 if not inspection['on'] and inspection['done']:
                     modbus_TCP_send_holding_registers("192.168.10.10",502,0, scanned_qr_zones_bools_final+[0,1])
                     inspection['done'] = False
                 elif not inspection['on']:
-                    _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
-                    if tmp == [1]:
-                        inspection['on'] = True
-                        print(inspection['on'])
+                    ret, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
+                    if ret:
+                        if tmp == [1]:
+                            inspection['on'] = True
+                            print(inspection['on'])
 
-            elif config['comm_mode'] == 1:
+            elif config["comm_mode"] == 1:
                 if not inspection['on'] and inspection['done']:
                     snap7_send_booleans("192.168.10.10",20,2, scanned_qr_zones_bools_final)
                     string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
@@ -218,10 +218,13 @@ def comm():
                     inspection['done'] = False
                 elif not inspection['on']:
                     # _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
-                    _, tmp = snap7_read_booleans("192.168.10.10", 20,0,2)
-                    if tmp[1]:
-                        inspection['on'] = True
-                        print(inspection['on'])
+                    ret, tmp = snap7_read_booleans("192.168.10.10", 20,0,2)
+                    if ret:
+                        if tmp[1]:
+                            inspection['on'] = True
+                            print(inspection['on'])
+            else:
+                print("Blad wyboru trybu komunikacji!")
 
 
         time.sleep(1)

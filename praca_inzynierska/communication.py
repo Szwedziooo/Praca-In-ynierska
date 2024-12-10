@@ -64,7 +64,8 @@ def snap7_read_booleans(IP, DB_number, DB_start_byte, num_of_bools):
             print(f"Read {bool_values} from DB {DB_number}, byte {DB_start_byte}")
         else:
             print("Connection to PLC S7-1200 failed")
-
+    except Exception as e:
+        print(f"Błąd podczas odczytu danych z PLC: {e}")
     finally:
         plc_client.disconnect()
 
