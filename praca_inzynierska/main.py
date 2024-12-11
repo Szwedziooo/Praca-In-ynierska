@@ -247,7 +247,7 @@ def comm():
                 if not inspection['on'] and inspection['done']:
                     snap7_send_booleans("192.168.10.10",20,2, scanned_qr_zones_bools_final)
                     print(scanned_qr_zones_str_final)
-                    snap7_send_strings("192.168.10.10",20, 4, scanned_qr_zones_str_final[0:11])
+                    snap7_send_strings("192.168.10.10",20, 4, scanned_qr_zones_str_final[0:12])
                     snap7_send_booleans("192.168.10.10", 20, 0, [1, 0])
                     inspection['done'] = False
                 elif not inspection['on']:
