@@ -47,8 +47,11 @@ config = {
     "global_grayscale_mode": 0,
     "global_debug_mode": 0,
     "global_margin": 10,
-    "comm_mode": 1
+    "comm_mode": 1,
+    "focus": 40
 }
+
+
 
 set_start_time = 1
 start_time = datetime.datetime.now()
@@ -246,8 +249,9 @@ def comm():
             elif config["comm_mode"] == 1:
                 if not inspection['on'] and inspection['done']:
                     snap7_send_booleans("192.168.10.10",20,2, scanned_qr_zones_bools_final)
+                    string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
                     print(scanned_qr_zones_str_final)
-                    snap7_send_strings("192.168.10.10",20, 4, scanned_qr_zones_str_final[0:12])
+                    snap7_send_strings("192.168.10.10",20, string_offsets, scanned_qr_zones_str_final[0:12])
                     snap7_send_booleans("192.168.10.10", 20, 0, [1, 0])
                     inspection['done'] = False
                 elif not inspection['on']:
@@ -295,6 +299,11 @@ def index():
         elif form == "comm":
             config["comm_mode"] = int(request.form.get('comm', default=0))
 
+        elif form == "focus":
+            config["focus"] = int(request.form.get('focus', default=0))
+            cap.set(cv2.CAP_PROP_FOCUS,config["focus"])
+
+    write_config("configs/config.json", config)
 
     return render_template('index.html')
 
@@ -318,6 +327,8 @@ if __name__ == "__main__":
         print(config)
     else:
         write_config("configs/config.json", config)
+
+    cap.set(cv2.CAP_PROP_FOCUS, config["focus"])
 
     #Wczytanie zapisanych punktów ROI
     if os.path.exists("configs/rois.json"):

@@ -1,68 +1,53 @@
 import cv2
-from ultralytics import YOLO
 
+# Funkcja do obsługi zmian suwaka
+def nothing(x):
+    pass
 
+# Otwórz kamerę (numer kamery może być różny w zależności od systemu)
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1920)
 
-yolo = YOLO("best_ncnn_model")
+# Sprawdzenie, czy udało się otworzyć kamerę
+if not cap.isOpened():
+    print("Nie udało się otworzyć kamery!")
+else:
+    print("Kamera otwarta pomyślnie!")
 
+# Utwórz okno, w którym będzie wyświetlany obraz
+cv2.namedWindow('Frame')
 
+# Utwórz suwak ostrości w oknie (zakres od 0 do 255) i ustaw skok na 5
+cv2.createTrackbar('Focus', 'Frame', 0, 255, nothing)
 
-# Load the video capture
-videoCap = cv2.VideoCapture(0)
-
-
-# Function to get class colors
-def getColours(cls_num):
-    base_colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
-    color_index = cls_num % len(base_colors)
-    increments = [(1, -2, 1), (-2, 1, -1), (1, -1, 2)]
-    color = [base_colors[color_index][i] + increments[color_index][i] *
-             (cls_num // len(base_colors)) % 256 for i in range(3)]
-    return tuple(color)
-
-
+# Odczyt klatki z kamery
 while True:
-    ret, frame = videoCap.read()
+    ret, frame = cap.read()
     if not ret:
-        continue
-    results = yolo.track(frame, stream=True)
+        print("Nie udało się pobrać klatki!")
+        break
 
-    for result in results:
-        # get the classes names
-        classes_names = result.names
+    # Odczyt wartości z suwaka
+    focus_value = cv2.getTrackbarPos('Focus', 'Frame')
 
-        # iterate over each box
-        for box in result.boxes:
-            # check if confidence is greater than 40 percent
-            if box.conf[0] > 0.4:
-                # get coordinates
-                [x1, y1, x2, y2] = box.xyxy[0]
-                # convert to int
-                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+    # Zaokrąglij wartość suwaka do najbliższego wielokrotności 5
+    focus_value = (focus_value // 5) * 5  # Skok co 5
 
-                # get the class
-                cls = int(box.cls[0])
+    # Ustawienie ostrości kamery na wartość z suwaka (jeśli kamera obsługuje tę funkcję)
+    cap.set(cv2.CAP_PROP_FOCUS, focus_value)
 
-                # get the class name
-                class_name = classes_names[cls]
+    # Wyświetlanie klatki
+    cv2.imshow('Frame', frame)
 
-                # get the respective colour
-                colour = getColours(cls)
-
-                # draw the rectangle
-                cv2.rectangle(frame, (x1, y1), (x2, y2), colour, 2)
-
-                # put the class name and confidence on the image
-                cv2.putText(frame, f'{classes_names[int(box.cls[0])]} {box.conf[0]:.2f}', (x1, y1),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, colour, 2)
-
-    # show the image
-    cv2.imshow('frame', frame)
-
-    # break the loop if 'q' is pressed
+    # Jeśli użytkownik naciśnie 'q', zakończ
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# release the video capture and destroy all windows
-videoCap.release()
+    # Sprawdzenie aktualnej ostrości
+    current_focus = cap.get(cv2.CAP_PROP_FOCUS)
+    print(f"Obecna ostrość: {current_focus}")
+
+# Zwalnianie kamery i zamykanie okna
+cap.release()
 cv2.destroyAllWindows()

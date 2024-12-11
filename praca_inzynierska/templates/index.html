@@ -126,6 +126,15 @@
         </form>
         </div>
     </div>
+    <div id="conf_box6">
+        <p>Zmień nastawe auto-focusa:</p>
+        <form method="POST">
+            <input type="range" name="focus" min="0" max="255" step="5" id="focus_range">
+            <button type="submit" name="form" value="focus">Zatwierdź</button>
+        </form>
+        <div id="focus_value_text"></div>
+
+    </div>
     
 
     <script>
@@ -144,5 +153,16 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
+    <script>
+        const rangeInput = document.getElementById('focus_range');
+        const outputDiv = document.getElementById('focus_value_text');
+
+        // Dodajemy nasłuchiwanie zdarzenia "input" na suwak
+        rangeInput.addEventListener('input', function() {
+            // Aktualizujemy tekst w divie
+            outputDiv.textContent = `Aktualna wartość: ${rangeInput.value}`;
+        });
+    </script>
 </body>
 </html>
