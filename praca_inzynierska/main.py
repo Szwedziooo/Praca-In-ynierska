@@ -75,6 +75,7 @@ def optical_processing():
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
+        cap.set(cv2.CAP_PROP_FOCUS, config["focus"])
         frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
         if config["global_detection_mode"] == 0:
@@ -301,7 +302,8 @@ def index():
 
         elif form == "focus":
             config["focus"] = int(request.form.get('focus', default=0))
-            cap.set(cv2.CAP_PROP_FOCUS,config["focus"])
+            print(config["focus"])
+
 
     write_config("configs/config.json", config)
 
