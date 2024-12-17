@@ -244,16 +244,21 @@ def generate_frame_www():
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-def comm():
+def comm(ip = "192.168.10.10"):
     global scanned_qr_zones_bools_final, scanned_qr_zones_str_final, inspection, config
     while True:
         with inspection['lock']:
             if config["comm_mode"] == 0:
                 if not inspection['on'] and inspection['done']:
-                    modbus_TCP_send_holding_registers("192.168.10.10",502,0, scanned_qr_zones_bools_final+[0,1,inspection['match']])
+                    modbus_TCP_send_holding_registers(ip,502,0, scanned_qr_zones_bools_final+[0,1,inspection['match']])
+                    temp_list = []
+                    for a in scanned_qr_zones_str_final:
+                        temp_list.append(int(a.replace('box','')))
+
+                    modbus_TCP_send_holding_registers(ip, 502, 101,temp_list)
                     inspection['done'] = False
                 elif not inspection['on']:
-                    ret, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
+                    ret, tmp = modbus_TCP_read_holding_registers(ip,502,20,1)
                     print(tmp)
                     if ret:
                         if tmp[0]:
@@ -262,14 +267,14 @@ def comm():
 
             elif config["comm_mode"] == 1:
                 if not inspection['on'] and inspection['done']:
-                    snap7_send_booleans("192.168.10.10",20,2, scanned_qr_zones_bools_final)
+                    snap7_send_booleans(ip,20,2, scanned_qr_zones_bools_final)
                     print(scanned_qr_zones_str_final)
-                    snap7_send_strings("192.168.10.10",20, 4, scanned_qr_zones_str_final[0:12])
-                    snap7_send_booleans("192.168.10.10", 20, 0, [1, 0, inspection['match']])
+                    snap7_send_strings(ip,20, 4, scanned_qr_zones_str_final[0:12])
+                    snap7_send_booleans(ip, 20, 0, [1, 0, inspection['match']])
                     inspection['done'] = False
                 elif not inspection['on']:
                     # _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
-                    ret, tmp = snap7_read_booleans("192.168.10.10", 20,0,2)
+                    ret, tmp = snap7_read_booleans(ip, 20,0,2)
                     if ret:
                         if tmp[1]:
                             inspection['on'] = True
