@@ -177,7 +177,7 @@ def optical_processing():
         elif config["global_detection_mode"] == 2:
             if model_init_flag:
                 resized_frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_LINEAR)
-                res = model.track(frame, stream=True)
+                res = model.track(resized_frame, stream=True)
 
 
                 frame = model_preview(res, frame)
@@ -200,12 +200,6 @@ def model_preview(results, frame):
                 [x1, y1, x2, y2] = box.xyxy[0]
                 # convert to int
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-
-                # get the class
-                cls = int(box.cls[0])
-
-                # get the class name
-                class_name = classes_names[cls]
 
                 # draw the rectangle
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (255,0,0), 2)
@@ -257,9 +251,10 @@ def comm(ip = "192.168.10.10"):
                         else:
                             temp_list.append(int(a.replace('Box','')))
 
+                    print(temp_list)
                     XDDDD = [0, 101]
                     XDDDDD = [scanned_qr_zones_bools_final+[0,1,inspection['match']], temp_list]
-                    modbus_TCP_send_holding_registers(ip,502,XDDDD, XDDDDD )
+                    modbus_TCP_send_holding_registers(ip,502,XDDDD, XDDDDD)
                     # modbus_TCP_send_holding_registers(ip, 502, 101, )
                     inspection['done'] = False
                 elif not inspection['on']:
