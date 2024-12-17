@@ -121,20 +121,19 @@ Komunukacja poprzez Modbus TCP:
 '''
 def modbus_TCP_send_holding_registers(plc_ip, default_port, HR_start_idx, values):
 
-    data_sent_status = False
+    data_sent = False
     client = ModbusTcpClient(host=plc_ip, port=default_port)
 
     try:
         if client.connect():
             print(f"PLC connected via MODBUS")
-            for a, b in zip(HR_start_idx, values):
-                send_result = client.write_registers(a, b)
-                if send_result.isError():
-                    print("ERROR sending DATA")
-                    data_sent = False
-                else:
-                    print("DATA has been sent successfully")
-                    data_sent = True
+            send_result = client.write_registers(HR_start_idx, values)
+            if send_result.isError():
+                print("ERROR sending DATA")
+                data_sent = False
+            else:
+                print("DATA has been sent successfully")
+                data_sent = True
         else:
             print("Connection via MODBUS failed")
     except Exception as e:
@@ -143,7 +142,7 @@ def modbus_TCP_send_holding_registers(plc_ip, default_port, HR_start_idx, values
     finally:
         client.close()
 
-    return data_sent_status
+    return data_sent
 
 def modbus_TCP_read_holding_registers(plc_ip, default_port, HR_start_idx, count):
 
