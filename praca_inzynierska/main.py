@@ -26,7 +26,7 @@ if platform.system() == "Linux":
     cap = cv2.VideoCapture(0)
 elif platform.system() == "Windows":
     # dla windowsa
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
 
 cap.set(cv2.CAP_PROP_FPS, 20)
@@ -58,9 +58,10 @@ start_time = datetime.datetime.now()
 
 inspection = {
     "counter": 0,
-    'on': False,
+    'on': True,
     'done': False,
     'lock': th.Lock(),
+    'match': False
 }
 
 
@@ -78,14 +79,12 @@ def optical_processing():
         ret, frame = cap.read()
         cap.set(cv2.CAP_PROP_FOCUS, config["focus"])
         frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        rois_frames_for_model = []
 
         if config["global_detection_mode"] == 0:
             if ret:
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
-                    if inspection['on'] and inspection['counter'] == 0:
-                        rois_frames_for_model.append(tmp_frame)
+
 
                     detected = decode(tmp_frame, symbols=[ZBarSymbol.QRCODE])
                     if not detected:
@@ -116,9 +115,17 @@ def optical_processing():
                                 if q != "":
                                     scanned_qr_zones_str_final[idx] = q.decode('utf-8')
                             inspection['counter'] += 1
+
                         elif inspection['counter'] == 5:
-                            xd = model_empty(rois_frames_for_model)
-                            print(xd)
+
+                            xd = model_empty.predict(source=frame, conf=0.7, save=False)
+
+                            if len(xd[0].boxes) - 1 == len(scanned_qr_zones_bools_final) - sum(scanned_qr_zones_bools_final):
+                                inspection['match'] = True
+                            else:
+                                inspection['match'] = False
+
+                            inspection['counter'] += 1
                         else:
                             inspection['on'] = False
                             inspection['counter'] = 0
@@ -243,7 +250,7 @@ def comm():
         with inspection['lock']:
             if config["comm_mode"] == 0:
                 if not inspection['on'] and inspection['done']:
-                    modbus_TCP_send_holding_registers("192.168.10.10",502,0, scanned_qr_zones_bools_final+[0,1])
+                    modbus_TCP_send_holding_registers("192.168.10.10",502,0, scanned_qr_zones_bools_final+[0,1,inspection['match']])
                     inspection['done'] = False
                 elif not inspection['on']:
                     ret, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
@@ -259,7 +266,7 @@ def comm():
                     string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
                     print(scanned_qr_zones_str_final)
                     snap7_send_strings("192.168.10.10",20, string_offsets, scanned_qr_zones_str_final[0:12])
-                    snap7_send_booleans("192.168.10.10", 20, 0, [1, 0])
+                    snap7_send_booleans("192.168.10.10", 20, 0, [1, 0, inspection['match']])
                     inspection['done'] = False
                 elif not inspection['on']:
                     # _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
