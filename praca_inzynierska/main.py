@@ -26,7 +26,7 @@ if platform.system() == "Linux":
     cap = cv2.VideoCapture(0)
 elif platform.system() == "Windows":
     # dla windowsa
-    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 
 cap.set(cv2.CAP_PROP_FPS, 20)
@@ -274,11 +274,12 @@ def comm():
 
         time.sleep(1)
 
-def init_model(model):
+def init_model(model, model_empty):
     global model_init_flag
 
     model(torch.zeros((1, 3, 640, 480)))
-    print("Koniec inicjalizacji modelu wykrywania QR")
+    model_empty(torch.zeros((1, 3, 640, 480)))
+    print("Koniec inicjalizacji modeli wykrywania QR oraz Pustego Miejsca")
     model_init_flag = True
 
             
@@ -325,7 +326,7 @@ threads = [
     th.Thread(target=optical_processing, daemon=True),
     th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True),
     th.Thread(target=comm, daemon=True),
-    th.Thread(target=init_model, kwargs={'model': model}, daemon=True)
+    th.Thread(target=init_model, kwargs={'model': model, 'model_empty':model_empty}, daemon=True)
 ]
 
 if __name__ == "__main__":

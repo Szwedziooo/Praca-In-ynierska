@@ -1,0 +1,14 @@
+description: Ultralytics YOLO11s model trained on /content/Praca-Inżynierska-cz.2-2/data.yaml
+author: Ultralytics
+date: '2024-12-17T14:56:32.259109'
+version: 8.3.44
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: Empty
