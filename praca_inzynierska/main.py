@@ -258,6 +258,7 @@ def comm(ip = "192.168.10.10"):
                         else:
                             temp_list.append(int(a.replace('Box','')))
                     sleep(10)
+                    print(temp_list)
                     modbus_TCP_send_holding_registers(ip, 502, 101, temp_list)
                     inspection['done'] = False
                 elif not inspection['on']:
