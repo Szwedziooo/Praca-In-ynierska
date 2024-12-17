@@ -58,7 +58,7 @@ start_time = datetime.datetime.now()
 
 inspection = {
     "counter": 0,
-    'on': True,
+    'on': False,
     'done': False,
     'lock': th.Lock(),
     'match': False
@@ -263,9 +263,8 @@ def comm():
             elif config["comm_mode"] == 1:
                 if not inspection['on'] and inspection['done']:
                     snap7_send_booleans("192.168.10.10",20,2, scanned_qr_zones_bools_final)
-                    string_offsets = [4, 260, 516, 772, 1028, 1284, 1540, 1796, 2052, 2308, 2564, 2820]
                     print(scanned_qr_zones_str_final)
-                    snap7_send_strings("192.168.10.10",20, string_offsets, scanned_qr_zones_str_final[0:12])
+                    snap7_send_strings("192.168.10.10",20, 4, scanned_qr_zones_str_final[0:12])
                     snap7_send_booleans("192.168.10.10", 20, 0, [1, 0, inspection['match']])
                     inspection['done'] = False
                 elif not inspection['on']:
