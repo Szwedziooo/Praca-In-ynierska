@@ -11,10 +11,10 @@ import torch
 
 from flask import Flask, render_template, request, Response
 from pyzbar.pyzbar import decode, ZBarSymbol
-from detect_rq import detect_qr
+from detect_rq import *
 from communication import *
-from write_config import write_config
-from read_conifg import read_config
+from write_config import *
+from read_conifg import *
 
 
 app = Flask(__name__)
@@ -65,10 +65,11 @@ inspection = {
 
 
 model = YOLO("best_ncnn_model")
+model_empty = YOLO("best_empty_ncnn_model")
 model_init_flag = False
 
 def optical_processing():
-    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, scanned_qr_zones_str_final, inspection, model, model_init_flag
+    global global_frame, ROIs, ROIs_temp, set_start_time, start_time, config, scanned_qr_zones_bools_final, scanned_qr_zones_str_final, inspection, model, model_empty, model_init_flag
     scanned_qr_zones_bools = [False] * 20
     scanned_qr_zones_str = [""] * 20
 
@@ -77,11 +78,15 @@ def optical_processing():
         ret, frame = cap.read()
         cap.set(cv2.CAP_PROP_FOCUS, config["focus"])
         frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        rois_frames_for_model = []
 
         if config["global_detection_mode"] == 0:
             if ret:
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
+                    if inspection['on'] and inspection['counter'] == 0:
+                        rois_frames_for_model.append(tmp_frame)
+
                     detected = decode(tmp_frame, symbols=[ZBarSymbol.QRCODE])
                     if not detected:
                         scanned_qr_zones_bools[idx] = False
@@ -111,6 +116,9 @@ def optical_processing():
                                 if q != "":
                                     scanned_qr_zones_str_final[idx] = q.decode('utf-8')
                             inspection['counter'] += 1
+                        elif inspection['counter'] == 5:
+                            xd = model_empty(rois_frames_for_model)
+                            print(xd)
                         else:
                             inspection['on'] = False
                             inspection['counter'] = 0
@@ -200,8 +208,6 @@ def model_preview(results, frame):
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
 
     return frame
-
-
 
 def generate_frame_www():
     while True:
