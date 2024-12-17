@@ -250,16 +250,17 @@ def comm(ip = "192.168.10.10"):
         with inspection['lock']:
             if config["comm_mode"] == 0:
                 if not inspection['on'] and inspection['done']:
-                    modbus_TCP_send_holding_registers(ip,502,0, scanned_qr_zones_bools_final+[0,1,inspection['match']])
                     temp_list = []
                     for a in scanned_qr_zones_str_final:
                         if a == '':
                             temp_list.append(0)
                         else:
                             temp_list.append(int(a.replace('Box','')))
-                    sleep(10)
-                    print(temp_list)
-                    modbus_TCP_send_holding_registers(ip, 502, 101, temp_list)
+
+                    XDDDD = [0, 101]
+                    XDDDDD = [scanned_qr_zones_bools_final+[0,1,inspection['match']], temp_list]
+                    modbus_TCP_send_holding_registers(ip,502,XDDDD, XDDDDD )
+                    # modbus_TCP_send_holding_registers(ip, 502, 101, )
                     inspection['done'] = False
                 elif not inspection['on']:
                     ret, tmp = modbus_TCP_read_holding_registers(ip,502,20,1)
