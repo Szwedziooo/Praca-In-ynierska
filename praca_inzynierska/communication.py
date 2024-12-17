@@ -127,7 +127,7 @@ def modbus_TCP_send_holding_registers(plc_ip, default_port, HR_start_idx, values
     try:
         if client.connect():
             print(f"PLC connected via MODBUS")
-            for a,b in HR_start_idx, values:
+            for a, b in zip(HR_start_idx, values):
                 send_result = client.write_registers(a, b)
             if send_result.isError():
                 print("ERROR sending DATA")
