@@ -140,6 +140,7 @@ def modbus_TCP_send_holding_registers(plc_ip, default_port, HR_start_idx, values
                     break
             else:
                 print("Connection via MODBUS failed")
+                sleep(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
