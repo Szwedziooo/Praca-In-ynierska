@@ -125,17 +125,21 @@ def modbus_TCP_send_holding_registers(plc_ip, default_port, HR_start_idx, values
     client = ModbusTcpClient(host=plc_ip, port=default_port)
 
     try:
-        if client.connect():
-            print(f"PLC connected via MODBUS")
-            send_result = client.write_registers(HR_start_idx, values)
-            if send_result.isError():
-                print("ERROR sending DATA")
-                data_sent = False
+        counter = 0
+        while counter < 3:
+            counter += 1
+            if client.connect():
+                print(f"PLC connected via MODBUS")
+                send_result = client.write_registers(HR_start_idx, values)
+                if send_result.isError():
+                    print("ERROR sending DATA")
+                    data_sent = False
+                else:
+                    print("DATA has been sent successfully")
+                    data_sent = True
+                    break
             else:
-                print("DATA has been sent successfully")
-                data_sent = True
-        else:
-            print("Connection via MODBUS failed")
+                print("Connection via MODBUS failed")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
