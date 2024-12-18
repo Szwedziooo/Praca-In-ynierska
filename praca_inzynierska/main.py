@@ -24,6 +24,17 @@ cap = cv2.VideoCapture
 if platform.system() == "Linux":
     # dla linuxa
     cap = cv2.VideoCapture(0)
+    properties = [
+        cv2.CAP_PROP_FPS,
+        cv2.CAP_PROP_FRAME_WIDTH,
+        cv2.CAP_PROP_FRAME_HEIGHT,
+        cv2.CAP_PROP_FOCUS,
+        # Dodaj inne właściwości, które chcesz sprawdzić
+    ]
+
+    for prop in properties:
+        print(f"Property {prop}: {cap.get(prop)}")
+
 elif platform.system() == "Windows":
     # dla windowsa
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
