@@ -133,7 +133,8 @@ def optical_processing():
                         elif inspection['counter'] == 5:
 
                             xd = model_empty.predict(source=frame, conf=0.7, save=False)
-
+                            print(len(xd[0].boxes))
+                            print(len(scanned_qr_zones_bools_final) - sum(scanned_qr_zones_bools_final))
                             if len(xd[0].boxes) == len(scanned_qr_zones_bools_final) - sum(scanned_qr_zones_bools_final):
                                 inspection['match'] = True
                             else:
