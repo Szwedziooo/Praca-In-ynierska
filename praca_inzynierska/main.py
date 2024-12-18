@@ -241,7 +241,7 @@ def generate_frame_www():
             pass
 
         if config['masking']:
-            frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['width'], masking_box['height']), (0, 0, 0), -1)
+            frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['x'] + masking_box['width'], masking_box['y'] + masking_box['height']), (0, 0, 0), -1)
 
         ret, buffer = cv2.imencode('.jpg', frame)
 
