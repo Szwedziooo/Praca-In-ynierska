@@ -9,6 +9,7 @@
         body {
             font-family: Arial, sans-serif;
             transition: background-color 0.3s, color 0.3s;
+            font-size: 20px;
         }
 
             /* Styl dla trybu ciemnego */
@@ -122,11 +123,12 @@
         <div id="conf_box4">
         </div>
         <div id="conf_box5">
-        <form method="POST">
-            <label> Margines </label>
-            <input type="range" name="margin" min="0" max="50">
-            <button type="submit" name="form" value="margin">Zatwierdź</button>
-        </form>
+            <form method="POST">
+                <label> Margines </label>
+                <input type="range" name="margin" min="0" max="50" value="{{margin}}" id="margin_range">
+                <button type="submit" name="form" value="margin">Zatwierdź</button>
+            </form>
+            <div id="margin_value_text"></div>
         </div>
     </div>
     <div id="conf_box6">
@@ -136,7 +138,6 @@
             <button type="submit" name="form" value="focus">Zatwierdź</button>
         </form>
         <div id="focus_value_text"></div>
-
     </div>
     <div id="conf_box7">
         <p>Ustawnienia Maskowania Obszaru</p>
@@ -203,6 +204,15 @@
         rangeInput.addEventListener('input', function() {
             // Aktualizujemy tekst w divie
             outputDiv.textContent = `Aktualna wartość: ${rangeInput.value}`;
+        });
+
+        const marginRangeInput = document.getElementById('margin_range');
+        const marginOutputDiv = document.getElementById('margin_value_text');
+
+        // Dodajemy nasłuchiwanie zdarzenia "input" na suwak
+        marginRangeInput.addEventListener('input', function() {
+            // Aktualizujemy tekst w divie
+            marginOutputDiv.textContent = `Aktualna wartość: ${marginRangeInput.value}`;
         });
     </script>
 </body>
