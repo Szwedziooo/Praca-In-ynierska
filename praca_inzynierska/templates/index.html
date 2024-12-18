@@ -83,7 +83,7 @@
         <button class="mode-toggle" onclick="toggleMode()">Zmień tryb</button>
         <div class="container" id="video_box">
             <!-- Obraz podglądu kamery -->
-            <img src="{{ url_for('video_feed') }}" alt="Podgląd kamery" />
+            <img src="{{ url_for('video_feed') }}" alt="Podgląd kamery" height="900" />
         </div>
 
         <div id="conf_box1">
@@ -135,6 +135,38 @@
         <div id="focus_value_text"></div>
 
     </div>
+    <div id="conf_box7">
+        <p>Ustawnienia Maskowania Obszaru</p>
+        <form method="POST">
+            <table>
+                <tbody>
+                    <tr>
+                        <td>Włącz maskowanie:</td>
+                        <td><input type="checkbox" name="active"></td>
+                    </tr>
+                    <tr>
+                        <td>X:</td>
+                        <td><input type="number" name="x"></td>
+                    </tr>
+                    <tr>
+                        <td>Y:</td>
+                        <td><input type="number" name="y"></td>
+                    </tr>
+                    <tr>
+                        <td>Szerokość:</td>
+                        <td><input type="number" name="width"></td>
+                    </tr>
+                    <tr>
+                        <td>Długość:</td>
+                        <td><input type="number" name="height"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="submit" name="form" value="masking">Zatwierdź</button>
+        </form>
+    </div>
+
+
     
 
     <script>

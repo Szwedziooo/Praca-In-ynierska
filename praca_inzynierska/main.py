@@ -26,7 +26,7 @@ if platform.system() == "Linux":
     cap = cv2.VideoCapture(0)
 elif platform.system() == "Windows":
     # dla windowsa
-    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 
 cap.set(cv2.CAP_PROP_FPS, 20)
@@ -48,7 +48,8 @@ config = {
     "global_debug_mode": 0,
     "global_margin": 10,
     "comm_mode": 1,
-    "focus": 40
+    "focus": 45,
+    'masking': False
 }
 
 
@@ -64,6 +65,12 @@ inspection = {
     'match': False
 }
 
+masking_box = {
+    "x": 0,
+    "y": 0,
+    "width": 0,
+    "height": 0,
+}
 
 model = YOLO("best_ncnn_model")
 model_empty = YOLO("best_empty_ncnn_model")
@@ -79,6 +86,10 @@ def optical_processing():
         ret, frame = cap.read()
         cap.set(cv2.CAP_PROP_FOCUS, config["focus"])
         frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+        if config['masking']:
+            frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['width'], masking_box['height']), (0, 0, 0), -1)
+
 
         if config["global_detection_mode"] == 0:
             if ret:
@@ -229,10 +240,14 @@ def generate_frame_www():
         elif config["global_detection_mode"] == 2:
             pass
 
+        if config['masking']:
+            frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['width'], masking_box['height']), (0, 0, 0), -1)
+
         ret, buffer = cv2.imencode('.jpg', frame)
 
         if not ret:
             continue
+
 
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
@@ -294,10 +309,11 @@ def init_model(model, model_empty):
             
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global config, model_init_flag
+    global config, model_init_flag, masking_box
 
     if request.method == 'POST':
         form = request.form.get('form')
+        print(request.form)  # Zobacz wszystkie przesłane dane formularza
 
         #Odczyt wartści dla trybu detekcji
         if form == "tryby":
@@ -319,6 +335,17 @@ def index():
         elif form == "focus":
             config["focus"] = int(request.form.get('focus', default=0))
             print(config["focus"])
+
+        elif form == "masking":
+            config["masking"] = (request.form.get('active', default=0))
+            masking_box['x'] = int(request.form.get('x', default=0))
+            masking_box['y'] = int(request.form.get('y', default=0))
+            masking_box['width'] = int(request.form.get('width', default=0))
+            masking_box['height'] = int(request.form.get('height', default=0))
+
+            print(config["masking"])
+            print(masking_box)
+            write_config("configs/masking_box.json", masking_box)
 
 
     write_config("configs/config.json", config)
@@ -353,6 +380,12 @@ if __name__ == "__main__":
         ROIs = read_config("configs/rois.json")
     else:
         write_config("configs/rois.json", ROIs)
+
+    # Wczytanie zapisanego rejonu maskowania
+    if os.path.exists("configs/masking_box.json"):
+        masking_box = read_config("configs/masking_box.json")
+    else:
+        write_config("configs/masking_box.json", masking_box)
 
 
     #Rozpoczęcie wątków
