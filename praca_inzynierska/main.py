@@ -86,15 +86,16 @@ def optical_processing():
     while True:
         # Pobierz klatkę z kamery
         ret, frame = cap.read()
-        cap.set(cv2.CAP_PROP_FOCUS, config["focus"])
-        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        if ret:
+            cap.set(cv2.CAP_PROP_FOCUS, config["focus"])
+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-        if config['masking']:
-            frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['x'] + masking_box['width'], masking_box['y'] + masking_box['height']), (0, 0, 0), -1)
+            if config['masking']:
+                frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['x'] + masking_box['width'], masking_box['y'] + masking_box['height']), (0, 0, 0), -1)
 
 
-        if config["global_detection_mode"] == 0:
-            if ret:
+            if config["global_detection_mode"] == 0:
+
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
 
@@ -145,8 +146,8 @@ def optical_processing():
                             inspection['done'] = True
 
 
-            with frame_lock:
-                global_frame = frame.copy()
+                with frame_lock:
+                    global_frame = frame.copy()
 
         elif config["global_detection_mode"] == 1:
             if model_init_flag:
