@@ -138,9 +138,9 @@ def optical_processing():
                             print(len(ROIs))
 
                             if len(xd[0].boxes) + sum(scanned_qr_zones_bools_final) == len(ROIs):
-                                inspection['match'] = True
-                            else:
                                 inspection['match'] = False
+                            else:
+                                inspection['match'] = True
 
                             inspection['counter'] += 1
                         else:
