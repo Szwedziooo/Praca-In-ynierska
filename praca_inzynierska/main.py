@@ -88,7 +88,7 @@ def optical_processing():
         frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
         if config['masking']:
-            frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['width'], masking_box['height']), (0, 0, 0), -1)
+            frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['x'] + masking_box['width'], masking_box['y'] + masking_box['height']), (0, 0, 0), -1)
 
 
         if config["global_detection_mode"] == 0:
@@ -338,10 +338,10 @@ def index():
 
         elif form == "masking":
             config["masking"] = (request.form.get('active', default=0))
-            masking_box['x'] = int(request.form.get('x', default=0))
-            masking_box['y'] = int(request.form.get('y', default=0))
-            masking_box['width'] = int(request.form.get('width', default=0))
-            masking_box['height'] = int(request.form.get('height', default=0))
+            masking_box['x'] = int(request.form.get('x', default=1))
+            masking_box['y'] = int(request.form.get('y', default=1))
+            masking_box['width'] = int(request.form.get('width', default=1))
+            masking_box['height'] = int(request.form.get('height', default=1))
 
             print(config["masking"])
             print(masking_box)
