@@ -152,57 +152,58 @@ def optical_processing():
                 with frame_lock:
                     global_frame = frame.copy()
 
-        elif config["global_detection_mode"] == 1:
-            if model_init_flag:
-                if set_start_time:
-                    start_time = datetime.datetime.now()
-                    set_start_time = 0
-                    ROIs_temp.clear()
 
-                if (datetime.datetime.now() - start_time).seconds < 2:
-                    ret, img = cap.read()
-                    img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                    if not ret:
-                        print("Nie udało się odczytać obrazu z kamery.")
-                        continue
+            elif config["global_detection_mode"] == 1:
+                if model_init_flag:
+                    if set_start_time:
+                        start_time = datetime.datetime.now()
+                        set_start_time = 0
+                        ROIs_temp.clear()
 
-                    #skala szarości
-                    if config["global_grayscale_mode"]:
-                        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    if (datetime.datetime.now() - start_time).seconds < 2:
+                        ret, img = cap.read()
+                        img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                        if not ret:
+                            print("Nie udało się odczytać obrazu z kamery.")
+                            continue
+
+                        #skala szarości
+                        if config["global_grayscale_mode"]:
+                            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
-                    # Detekcja kodów QR za pomocą pyzbar
-                    rois = detect_qr(img, model=model, margin=config["global_margin"])
-                    ROIs_temp.append(rois)
+                        # Detekcja kodów QR za pomocą pyzbar
+                        rois = detect_qr(img, model=model, margin=config["global_margin"])
+                        ROIs_temp.append(rois)
 
+                    else:
+                        MaxQRDetected = 0
+                        for idx, x in enumerate(ROIs_temp):
+                            if len(x) > MaxQRDetected:
+                                MaxQRDetected = len(x)
+                            else:
+                                ROIs_temp.remove(x)
+
+                        ROIs = ROIs_temp.pop()
+                        write_config("configs/rois.json",ROIs)
+                        set_start_time = 1
+                        config["global_detection_mode"] = 0
                 else:
-                    MaxQRDetected = 0
-                    for idx, x in enumerate(ROIs_temp):
-                        if len(x) > MaxQRDetected:
-                            MaxQRDetected = len(x)
-                        else:
-                            ROIs_temp.remove(x)
-
-                    ROIs = ROIs_temp.pop()
-                    write_config("configs/rois.json",ROIs)
-                    set_start_time = 1
+                    print("Model nie zostal jeszcze zainicjalizowany")
                     config["global_detection_mode"] = 0
-            else:
-                print("Model nie zostal jeszcze zainicjalizowany")
-                config["global_detection_mode"] = 0
 
-        elif config["global_detection_mode"] == 2:
-            if model_init_flag:
-                resized_frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_LINEAR)
-                res = model.track(resized_frame, stream=True)
+            elif config["global_detection_mode"] == 2:
+                if model_init_flag:
+                    resized_frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_LINEAR)
+                    res = model.track(resized_frame, stream=True)
 
 
-                frame = model_preview(res, frame)
+                    frame = model_preview(res, frame)
 
-                with frame_lock:
-                    global_frame = frame.copy()
-            else:
-                print("Model nie zostal jeszcze zainicjalizowany")
+                    with frame_lock:
+                        global_frame = frame.copy()
+                else:
+                    print("Model nie zostal jeszcze zainicjalizowany")
 
 def model_preview(results, frame):
     for result in results:
