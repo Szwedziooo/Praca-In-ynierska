@@ -78,6 +78,10 @@
         input[type=text], input[type=number], select{
             width: 150px;
         }
+
+        #camera_vid{
+            margin-right: 15px;
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -87,7 +91,7 @@
         <button class="mode-toggle" onclick="toggleMode()">Zmień tryb</button>
         <div class="container" id="video_box">
             <!-- Obraz podglądu kamery -->
-            <img src="{{ url_for('video_feed') }}" alt="Podgląd kamery" height="900" />
+            <img src="{{ url_for('video_feed') }}" alt="Podgląd kamery" height="900" id="camera_vid" />
         </div>
 
         <div id="conf_box1">
