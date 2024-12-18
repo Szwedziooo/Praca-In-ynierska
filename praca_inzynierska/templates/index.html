@@ -74,6 +74,9 @@
 
         }
 
+        input[type=text], input[type=number], select{
+            width: 150px;
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -90,9 +93,9 @@
             <p>Wybierz tryb detekcji:</p>
             <form method="POST">
                 <select name="tryby">
-                    <option value="0">Wykrywanie</option>
-                    <option value="1">Ustawienie ROIs</option>
-                    <option value="2">Podgląg/Konfiguracja</option>
+                    <option value="0" {% if global_detection_mode == 0 %} selected {% endif %}>Wykrywanie</option>
+                    <option value="1" {% if global_detection_mode == 1 %} selected {% endif %}>Ustawienie ROIs</option>
+                    <option value="2" {% if global_detection_mode == 2 %} selected {% endif %}>Podgląg/Konfiguracja</option>
                 </select>
                 <button type="submit" name="form" value="tryby">Zatwierdź</button>
             </form>
@@ -101,8 +104,8 @@
             <p>Wybierz tryb komuniacji:</p>
             <form method="POST">
                 <select name="comm">
-                    <option value="0">Modbus TCP/IP</option>
-                    <option value="1">Snap7</option>
+                    <option value="0" {% if comm_mode == 0 %} selected {% endif %}>Modbus TCP/IP</option>
+                    <option value="1" {% if comm_mode == 1 %} selected {% endif %}>Snap7</option>
                 </select>
                 <button type="submit" name="form" value="comm">Zatwierdź</button>
             </form>
@@ -129,7 +132,7 @@
     <div id="conf_box6">
         <p>Zmień nastawe auto-focusa:</p>
         <form method="POST">
-            <input type="range" name="focus" min="0" max="255" step="5" id="focus_range">
+            <input type="range" name="focus" min="0" max="255" step="5" value="{{focus}}" id="focus_range">
             <button type="submit" name="form" value="focus">Zatwierdź</button>
         </form>
         <div id="focus_value_text"></div>
@@ -142,30 +145,36 @@
                 <tbody>
                     <tr>
                         <td>Włącz maskowanie:</td>
-                        <td><input type="checkbox" name="active"></td>
+                        <td><input type="checkbox" name="active" {% if masking %} checked {% endif %}></td>
                     </tr>
                     <tr>
                         <td>X:</td>
-                        <td><input type="number" name="x"></td>
+                        <td><input type="number" name="x" value="{{x}}"></td>
                     </tr>
                     <tr>
                         <td>Y:</td>
-                        <td><input type="number" name="y"></td>
+                        <td><input type="number" name="y" value="{{y}}"></td>
                     </tr>
                     <tr>
                         <td>Szerokość:</td>
-                        <td><input type="number" name="width"></td>
+                        <td><input type="number" name="width" value="{{width}}"></td>
                     </tr>
                     <tr>
                         <td>Długość:</td>
-                        <td><input type="number" name="height"></td>
+                        <td><input type="number" name="height" value="{{height}}"></td>
                     </tr>
                 </tbody>
             </table>
             <button type="submit" name="form" value="masking">Zatwierdź</button>
         </form>
     </div>
-
+    <div id="conf_box8">
+        <p>Ustawienia IP sterowanika:</p>
+        <form method="POST">
+            <input type="text" name="ip" value="{{ip}}">
+            <button type="submit" name="form" value="ip">Zatwierdź</button>
+        </form>
+    </div>
 
     
 

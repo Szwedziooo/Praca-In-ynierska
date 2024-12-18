@@ -49,9 +49,9 @@ config = {
     "global_margin": 10,
     "comm_mode": 1,
     "focus": 45,
-    'masking': False
+    'masking': False,
+    'ip': "192.168.10.10"
 }
-
 
 
 set_start_time = 1
@@ -253,7 +253,7 @@ def generate_frame_www():
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-def comm(ip = "192.168.10.10"):
+def comm():
     global scanned_qr_zones_bools_final, scanned_qr_zones_str_final, inspection, config
     while True:
         with inspection['lock']:
@@ -267,11 +267,11 @@ def comm(ip = "192.168.10.10"):
                             temp_list.append(int(a.replace('Box','')))
 
                     print(temp_list)
-                    ret = modbus_TCP_send_holding_registers(ip, 502, 101, temp_list)
-                    ret = modbus_TCP_send_holding_registers(ip,502,0, scanned_qr_zones_bools_final+[0,1,inspection['match']])
+                    ret = modbus_TCP_send_holding_registers(config['ip'], 502, 101, temp_list)
+                    ret = modbus_TCP_send_holding_registers(config['ip'],502,0, scanned_qr_zones_bools_final+[0,1,inspection['match']])
                     inspection['done'] = False
                 elif not inspection['on']:
-                    ret, tmp = modbus_TCP_read_holding_registers(ip,502,20,1)
+                    ret, tmp = modbus_TCP_read_holding_registers(config['ip'],502,20,1)
                     print(tmp)
                     if ret:
                         if tmp[0]:
@@ -280,14 +280,14 @@ def comm(ip = "192.168.10.10"):
 
             elif config["comm_mode"] == 1:
                 if not inspection['on'] and inspection['done']:
-                    snap7_send_booleans(ip,20,2, scanned_qr_zones_bools_final)
+                    snap7_send_booleans(config['ip'],20,2, scanned_qr_zones_bools_final)
                     print(scanned_qr_zones_str_final)
-                    snap7_send_strings(ip,20, 4, scanned_qr_zones_str_final[0:12])
-                    snap7_send_booleans(ip, 20, 0, [1, 0, inspection['match']])
+                    snap7_send_strings(config['ip'],20, 4, scanned_qr_zones_str_final[0:12])
+                    snap7_send_booleans(config['ip'], 20, 0, [1, 0, inspection['match']])
                     inspection['done'] = False
                 elif not inspection['on']:
                     # _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
-                    ret, tmp = snap7_read_booleans(ip, 20,0,2)
+                    ret, tmp = snap7_read_booleans(config['ip'], 20,0,2)
                     if ret:
                         if tmp[1]:
                             inspection['on'] = True
@@ -347,10 +347,14 @@ def index():
             print(masking_box)
             write_config("configs/masking_box.json", masking_box)
 
+        elif form == "ip":
+            config["ip"] = request.form.get('ip', default="127.0.0.1")
+            print(config['ip'])
+
 
     write_config("configs/config.json", config)
 
-    return render_template('index.html')
+    return render_template('index.html',**config, **masking_box)
 
 
 @app.route('/video_feed')
