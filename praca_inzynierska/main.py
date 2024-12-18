@@ -28,7 +28,7 @@ if platform.system() == "Linux":
     os.system("v4l2-ctl --set-ctrl=focus_automatic_continuous=0")
 elif platform.system() == "Windows":
     # dla windowsa
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
 
 cap.set(cv2.CAP_PROP_FPS, 20)
@@ -131,9 +131,9 @@ def optical_processing():
 
                         elif inspection['counter'] == 5:
 
-                            xd = model_empty.predict(source=frame, conf=0.7, save=False)
+                            xd = model_empty.predict(source=frame, conf=0.7, save=True)
 
-                            if len(xd[0].boxes) - 1 == len(scanned_qr_zones_bools_final) - sum(scanned_qr_zones_bools_final):
+                            if len(xd[0].boxes) == len(scanned_qr_zones_bools_final) - sum(scanned_qr_zones_bools_final):
                                 inspection['match'] = True
                             else:
                                 inspection['match'] = False
