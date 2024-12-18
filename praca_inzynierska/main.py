@@ -227,7 +227,7 @@ def model_preview(results, frame):
 def generate_frame_www():
     while True:
         with frame_lock:
-            if frame_lock is None: 
+            if global_frame is None:
                 frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
             else:
                 frame = global_frame
