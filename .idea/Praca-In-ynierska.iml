@@ -9,6 +9,7 @@
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="C:\Users\jacek\PycharmProjects\Praca-In-ynierska\praca_inzynierska\requirements.txt" />
+    <option name="versionSpecifier" value="Strong equality (==x.y.z)" />
     <option name="removeUnused" value="true" />
   </component>
   <component name="PyDocumentationSettings">

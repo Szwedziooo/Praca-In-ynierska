@@ -84,21 +84,23 @@ def optical_processing():
     scanned_qr_zones_str = [""] * 20
 
     while True:
-        # Pobierz klatkę z kamery
+        #Pobierz klatkę z kamery
         ret, frame = cap.read()
         if ret:
             cap.set(cv2.CAP_PROP_FOCUS, config["focus"])
+            #Obrót klatki o 90 stopni
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
+            #Dodanie maskowania obszaru
             if config['masking']:
                 frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['x'] + masking_box['width'], masking_box['y'] + masking_box['height']), (0, 0, 0), -1)
 
-
+            #Pierwszy tryb - załączenie detekcji (z użyciem ROI)
             if config["global_detection_mode"] == 0:
 
+                #Pętla odpowiedzialna za detekcje i dekodowanie kodów w strefach
                 for idx, (x,y,w,h) in enumerate(ROIs):
                     tmp_frame = frame[y:y+h,x:x+w]
-
 
                     detected = decode(tmp_frame, symbols=[ZBarSymbol.QRCODE])
                     if not detected:
@@ -110,8 +112,9 @@ def optical_processing():
                         frame = cv2.polylines(frame, [np.array(detected[0].polygon, dtype=np.int32) + np.array((x,y))], True,(0, 255, 0), 5)
                         frame = cv2.putText(frame, str(detected[0].data), detected[0].polygon[0] + np.array((x,y)),1,2,(0, 0, 255),2)
 
-
+                #Obsługa załączenia detekcji kodów QR z poziomu komunikacji
                 if inspection['on']:
+                    #rezerwacja operacji dla inspekcji (wtedy komunikacja jest zawieszona)
                     with inspection['lock']:
                         print("Wlaczono inspekcje")
                         if inspection['counter'] == 0:
@@ -120,6 +123,7 @@ def optical_processing():
                             scanned_qr_zones_bools = [False] * 20
                             scanned_qr_zones_str = [""] * 20
 
+                        #Wykonanie inspekcji na 5 róznych klatkach w celu wyeliminowania pomyłki
                         if inspection['counter'] < 5:
                             for idx, q in enumerate(scanned_qr_zones_bools):
                                 if q:
@@ -130,6 +134,7 @@ def optical_processing():
                                     scanned_qr_zones_str_final[idx] = q.decode('utf-8')
                             inspection['counter'] += 1
 
+                        #Załączenie wykrywania pustego miejsca oraz sumowanie pustych miejsc z wykrytymi kodami QR (suma musi równać się liczbie ROI)
                         elif inspection['counter'] == 5:
 
                             xd = model_empty.predict(source=frame, conf=0.7, save=False)
@@ -148,11 +153,11 @@ def optical_processing():
                             inspection['counter'] = 0
                             inspection['done'] = True
 
-
+                #Zablokowanie zmiennej na czas kopiowania przetworzonej ramki
                 with frame_lock:
                     global_frame = frame.copy()
 
-
+            #Drugi Tryb - Wykrywanie ROI
             elif config["global_detection_mode"] == 1:
                 if model_init_flag:
                     if set_start_time:
@@ -172,11 +177,12 @@ def optical_processing():
                             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
-                        # Detekcja kodów QR za pomocą pyzbar
+                        # Detekcja kodów QR za pomocą modelu NCNN
                         rois = detect_qr(img, model=model, margin=config["global_margin"])
                         ROIs_temp.append(rois)
 
                     else:
+                        #Usuwanie wszytkich list poza tą która ma najwięcej wykrytych kodów
                         MaxQRDetected = 0
                         for idx, x in enumerate(ROIs_temp):
                             if len(x) > MaxQRDetected:
@@ -185,6 +191,7 @@ def optical_processing():
                                 ROIs_temp.remove(x)
 
                         ROIs = ROIs_temp.pop()
+                        #Zapis ROI do pliku
                         write_config("configs/rois.json",ROIs)
                         set_start_time = 1
                         config["global_detection_mode"] = 0
@@ -192,6 +199,7 @@ def optical_processing():
                     print("Model nie zostal jeszcze zainicjalizowany")
                     config["global_detection_mode"] = 0
 
+            #Trzeci Tryb - Podgląd działania modelu wykrywania kodów QR
             elif config["global_detection_mode"] == 2:
                 if model_init_flag:
                     resized_frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_LINEAR)
@@ -205,32 +213,32 @@ def optical_processing():
                 else:
                     print("Model nie zostal jeszcze zainicjalizowany")
 
+
+#Funkcja rusująca boxy, pewności wykrycia oraz klase wykrytego obiektu dla modelu
 def model_preview(results, frame):
     for result in results:
-        # get the classes names
         classes_names = result.names
 
-        # iterate over each box
         for box in result.boxes:
-            # check if confidence is greater than 40 percent
+
             if box.conf[0] > 0.4:
-                # get coordinates
                 [x1, y1, x2, y2] = box.xyxy[0]
-                # convert to int
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
-                # draw the rectangle
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (255,0,0), 2)
 
-                # put the class name and confidence on the image
                 cv2.putText(frame, f'{classes_names[int(box.cls[0])]} {box.conf[0]:.2f}', (x1, y1),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
 
     return frame
 
+
+#Funkcja generująca obraz widziany na stronie www
 def generate_frame_www():
     while True:
+        #Sprawdzanie czy ramka nie jest nigdzie indziej przetwarzana
         with frame_lock:
+            #Jeżeli ramka jest pusta zastąp ją pustą macierzą
             if global_frame is None:
                 frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
             else:
@@ -240,6 +248,7 @@ def generate_frame_www():
         if config["global_grayscale_mode"]:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+        #Rysowanie ROI dla pierwszego trybu
         if config["global_detection_mode"] == 0:
             for idx, (x, y, w, h) in enumerate(ROIs):
                 cv2.rectangle(frame, (x, y), (x + w, y + h), color=(255, 0, 0), thickness=2)
@@ -247,24 +256,30 @@ def generate_frame_www():
         elif config["global_detection_mode"] == 2:
             pass
 
+        #pokazanie zamaskowanego obszaru na klatce
         if config['masking']:
             frame = cv2.rectangle(frame, (masking_box['x'], masking_box['y']), (masking_box['x'] + masking_box['width'], masking_box['y'] + masking_box['height']), (0, 0, 0), -1)
 
+        #kodowanie ramki do formatu .jpg
         ret, buffer = cv2.imencode('.jpg', frame)
 
         if not ret:
             continue
 
-
+        #generowanie strumienia danych gotowego do przesłania do strony www
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
+#funkcja komunikacji z PLC
 def comm():
     global scanned_qr_zones_bools_final, scanned_qr_zones_str_final, inspection, config
     while True:
+        #rezerwacja operacji podczas przesyłania danych (wtedy inspekcja jest zawieszona)
         with inspection['lock']:
+            #Tryb Komunikacji - ModBus
             if config["comm_mode"] == 0:
+                #Wysyłanie danych po zakończeniu inspekcji
                 if not inspection['on'] and inspection['done']:
                     temp_list = []
                     for a in scanned_qr_zones_str_final:
@@ -277,6 +292,7 @@ def comm():
                     ret = modbus_TCP_send_holding_registers(config['ip'], 502, 101, temp_list)
                     ret = modbus_TCP_send_holding_registers(config['ip'],502,0, scanned_qr_zones_bools_final+[0,1,inspection['match']])
                     inspection['done'] = False
+                #Nasłuchiwanie na rozpoczęcie inspekcji
                 elif not inspection['on']:
                     ret, tmp = modbus_TCP_read_holding_registers(config['ip'],502,20,1)
                     print(tmp)
@@ -285,13 +301,16 @@ def comm():
                             inspection['on'] = True
                             print(inspection['on'])
 
+            #Tryb Komunikacji - Snap7
             elif config["comm_mode"] == 1:
+                #Wysyłanie danych po zakończeniu inspekcji
                 if not inspection['on'] and inspection['done']:
                     snap7_send_booleans(config['ip'],20,2, scanned_qr_zones_bools_final)
                     print(scanned_qr_zones_str_final)
                     snap7_send_strings(config['ip'],20, 4, scanned_qr_zones_str_final[0:12])
                     snap7_send_booleans(config['ip'], 20, 0, [1, 0, inspection['match']])
                     inspection['done'] = False
+                #Nasłuchiwanie na rozpoczęcie inspekcji
                 elif not inspection['on']:
                     # _, tmp = modbus_TCP_read_holding_registers("192.168.10.10",502,20,1)
                     ret, tmp = snap7_read_booleans(config['ip'], 20,0,2)
@@ -305,6 +324,7 @@ def comm():
 
         time.sleep(1)
 
+#Fukcja, która inicjalizuje modele przy starcie programu
 def init_model(model, model_empty):
     global model_init_flag
 
@@ -313,11 +333,12 @@ def init_model(model, model_empty):
     print("Koniec inicjalizacji modeli wykrywania QR oraz Pustego Miejsca")
     model_init_flag = True
 
-            
+#Funkcja, która odpowiada za wymiane informacji za pomocą Flaska między programem głównym a stroną www index.html
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global config, model_init_flag, masking_box
 
+    #Sprawdzanie czy zostały przesłane jakieś dane za pomocą formularza
     if request.method == 'POST':
         form = request.form.get('form')
         print(request.form)  # Zobacz wszystkie przesłane dane formularza
@@ -336,13 +357,16 @@ def index():
         elif form == "margin":
             config["global_margin"] = int(request.form.get('margin', default=0))
 
+        #Odczyt trybu komunikacji
         elif form == "comm":
             config["comm_mode"] = int(request.form.get('comm', default=0))
 
+        #Odczyt wartości ustawnionego focusa
         elif form == "focus":
             config["focus"] = int(request.form.get('focus', default=0))
             print(config["focus"])
 
+        #Odczyt parametrów maskowania
         elif form == "masking":
             config["masking"] = (request.form.get('active', default=0))
             masking_box['x'] = int(request.form.get('x', default=1))
@@ -353,22 +377,24 @@ def index():
             print(config["masking"])
             print(masking_box)
             write_config("configs/masking_box.json", masking_box)
-
+        #Odczyt ustawionego IP
         elif form == "ip":
             config["ip"] = request.form.get('ip', default="127.0.0.1")
             print(config['ip'])
 
-
+    #Zapis bieżących parametrów w pliku konfiguracji
     write_config("configs/config.json", config)
 
+    #Zwracanie kodu strony wraz z bieżącymi parametrami
     return render_template('index.html',**config, **masking_box)
 
-
+#Funkcja odpowiedzialna a przesył strumienia wideo
 @app.route('/video_feed')
 def video_feed():
     # Endpoint do przesyłania strumienia wideo
     return Response(generate_frame_www(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+#Główne wątki programu
 threads = [
     th.Thread(target=optical_processing, daemon=True),
     th.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5001, 'threaded': True}, daemon=True),
