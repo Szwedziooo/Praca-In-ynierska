@@ -202,9 +202,8 @@ def optical_processing():
             #Trzeci Tryb - Podgląd działania modelu wykrywania kodów QR
             elif config["global_detection_mode"] == 2:
                 if model_init_flag:
-                    resized_frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_LINEAR)
-                    res = model.track(resized_frame, stream=True)
-
+                    #resized_frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_LINEAR)
+                    res = model.track(frame, stream=True)
 
                     frame = model_preview(res, frame)
 

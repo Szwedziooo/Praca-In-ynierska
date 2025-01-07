@@ -4,7 +4,6 @@ from ultralytics import YOLO
 
 
 def detect_qr(img, model, margin=10):
-    #detections = decode(img, symbols=[ZBarSymbol.QRCODE])
     res = model.predict(source=img, conf=0.6, save=False)
     print("wykrywanie")
 
@@ -13,7 +12,7 @@ def detect_qr(img, model, margin=10):
     for r in res:
         for box in r.boxes:
             cls = box.cls  #Klasa obiektu
-            if cls == 0:  #Zakładamy, że kod QR ma odpowiedni indeks klasy (musisz dostosować)
+            if cls == 0:
                 #Pobieranie współrzędnych z ramki
                 x1, y1, x2, y2 = box.xyxy[0].numpy()
 
