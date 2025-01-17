@@ -211,6 +211,7 @@ def optical_processing():
                         global_frame = frame.copy()
                 else:
                     print("Model nie zostal jeszcze zainicjalizowany")
+                    config["global_detection_mode"] = 0
 
 
 #Funkcja rusująca boxy, pewności wykrycia oraz klase wykrytego obiektu dla modelu
